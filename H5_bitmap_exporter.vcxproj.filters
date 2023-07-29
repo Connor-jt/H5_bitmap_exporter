@@ -18,6 +18,9 @@
     <ClCompile Include="H5_bitmap_exporter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tagprocessing\TagFramework.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bitm.h">
@@ -25,6 +28,12 @@
     </ClInclude>
     <ClInclude Include="commons.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tagprocessing\TagFramework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tagprocessing\TagStructs.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

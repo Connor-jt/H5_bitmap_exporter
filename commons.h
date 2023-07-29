@@ -64,6 +64,8 @@ struct _s_tagblock {
     T* content_ptr;
     int64_t structure_ptr;
     int32_t count;
+    uint32_t unk1; // h5 exclusive
+    uint32_t unk2; // h5 exclusive
     T* operator[] (uint32_t index) {
         if (index >= count) throw new exception("attempted to access out of bounds _s_tagblock index");
         return content_ptr + index;
@@ -71,6 +73,7 @@ struct _s_tagblock {
 };
 struct _s_tagref {
     void* content_ptr; // ptr to the tag in question
+    uint32_t nameLength; // h5 exclusive 
     uint32_t tagid;
     uint64_t assetid;
     uint32_t group;
@@ -79,7 +82,8 @@ struct _s_tagref {
 struct _s_data {
     char* content_ptr;
     int64_t structure_ptr;
-    uint32_t compiled_unk;
+    uint32_t compiled_unk1; 
+    uint32_t compiled_unk2; // h5 exclusive 
     uint32_t data_size;
     char operator[] (uint32_t index) { // why did we put this here? i dont think we'd ever need to index the _s_data
         if (index >= data_size) throw new exception("attempted to access out of bounds _s_data index");

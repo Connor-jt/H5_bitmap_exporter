@@ -27,18 +27,21 @@ namespace TagStructs {
         uint32_t        Version;
         uint64_t        Unk_0x08;
         uint64_t        AssetChecksum;
+        uint32_t        Unk0x18; // exist in h5, not hI
+
         uint32_t        DependencyCount;
         uint32_t        DataBlockCount;
         uint32_t        TagStructCount;
         uint32_t        DataReferenceCount;
         uint32_t        TagReferenceCount;
+        uint32_t        StringIDCount; // exists in h5, not hI
         uint32_t        StringTableSize;
         uint32_t        ZoneSetDataSize;
-        uint32_t        Unk_0x34;
+        // uint32_t     Unk_0x34; // exists in hI, not h5
         uint32_t        HeaderSize;
         uint32_t        DataSize;
         uint32_t        ResourceDataSize;
-        uint32_t        ActualResoureDataSize;
+        // uint32_t     ActualResoureDataSize; // exists in hI, not h5
         uint8_t         HeaderAlignment;
         uint8_t         TagDataAlightment;
         uint8_t         ResourceDataAligment;
@@ -100,14 +103,17 @@ namespace TagStructs {
 
 
     // actual structs that are contained within the tags
-    // basic versions of the structs
+    // basic versions of the structs, to be used for module processing
     struct _basic_tagblock {
         void* content_ptr; // ptr to more structs
         int64_t structure_ptr;
         int32_t count;
+        uint32_t unk1; // h5 exclusive
+        uint32_t unk2; // h5 exclusive
     };
     struct _basic_tagref {
         void* content_ptr; // ptr to tag
+        uint32_t nameLength; // h5 exclusive 
         uint32_t tagid;
         uint64_t assetid;
         uint32_t group;
@@ -116,7 +122,8 @@ namespace TagStructs {
     struct _basic_data {
         char* content_ptr; // ptr to literal data
         int64_t structure_ptr;
-        uint32_t compiled_unk;
+        uint32_t compiled_unk1;
+        uint32_t compiled_unk2; // h5 exclusive 
         uint32_t data_size;
     };
     struct _basic_resource {

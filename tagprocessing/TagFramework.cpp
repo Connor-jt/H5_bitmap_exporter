@@ -10,11 +10,12 @@ uint64_t TagProcessing::resolve_datablock_offset(data_block* datar, tag_loading_
 	else return -1;
 }
 
-void TagProcessing::Open_ready_tag(char* tag_bytes, uint64_t tag_size, char*& _Out_tag, char*& _Out_cleanup_ptr){
-	Processtag(tag_bytes, tag_size, _Out_tag, _Out_cleanup_ptr);
+TAG_OBJ_TYPE TagProcessing::Open_ready_tag(char* tag_bytes, uint64_t tag_size, char*& _Out_tag, char*& _Out_cleanup_ptr){
+	TAG_OBJ_TYPE resulting_type = Processtag(tag_bytes, tag_size, _Out_tag, _Out_cleanup_ptr);
 	delete[] tag_bytes; // cleanup the file read request
+	return resulting_type;
 }
-void TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char*& _Out_data, char*& _Out_cleanup_ptr){
+TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char*& _Out_data, char*& _Out_cleanup_ptr){
 	uint64_t current_byte_offset = 0;
 	uint32_t current_resource_index = 0;
 
@@ -27,6 +28,9 @@ void TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char*& _Out_
 
 	tag_loading_offsets* offsets = new tag_loading_offsets;
 	// index each significant block
+
+
+	// dependancies appear to not be correct
 	offsets->tag_dependencies_offset = current_byte_offset;
 	current_byte_offset += static_cast<uint64_t>(header->DependencyCount) * tag_dependency_size;
 
@@ -41,6 +45,10 @@ void TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char*& _Out_
 
 	offsets->tag_fixup_references_offset = current_byte_offset;
 	current_byte_offset += static_cast<uint64_t>(header->TagReferenceCount) * tag_fixup_reference_size;
+
+	// string id list is read here (exclusive to h5)
+	offsets->string_IDs_offset = current_byte_offset;
+	current_byte_offset += static_cast<uint64_t>(header->StringIDCount) * sizeof(uint32_t); // aka 4 bytes
 
 	offsets->string_table_offset = current_byte_offset;
 	current_byte_offset += header->StringTableSize;
@@ -61,7 +69,7 @@ void TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char*& _Out_
 
 	// now we note any unmapped data segments in the file
 	
-	if (offsets->data_3_offset + current_byte_offset + header->ActualResoureDataSize != file_size) {
+	if (offsets->data_3_offset + current_byte_offset != file_size) {
 		delete[] runtime_bytes;
 		delete offsets;
 		throw new exception("unaccounted bytes detected in tag file! potential read failure! potential bad struct mappings!");
@@ -149,19 +157,21 @@ void TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char*& _Out_
 
 	}
 	*/
-	/*
-	TAG_OBJ_TYPE resulting_group = NONE;
-	switch (target_group){
-	case  1236057003492058159: resulting_group = bitmap;		break;
-	case  4657725475941061082: resulting_group = runtime_geo;	break;
-	case 13546876791234752572: resulting_group = render_model;	break;
-	case  9265759122008847170: resulting_group = level;			break;
-	}
-	*/
+	
+
+	
 	// assign the output data
 	data_block* root_datar = reinterpret_cast<data_block*> (&tag_bytes[offsets->data_blocks_offset + (root_struct->TargetIndex * data_block_size)]);
 
 	_Out_data = &runtime_bytes[resolve_datablock_offset(root_datar, offsets)];
 	_Out_cleanup_ptr = runtime_bytes; // how is this outputting a number thats 0x28 larger than the previous
 	delete offsets;
+	TAG_OBJ_TYPE resulting_group = NONE;
+	switch (target_group) {
+	case  1236057003492058159: return bitmap;		
+	case  4657725475941061082: return runtime_geo;	
+	case 13546876791234752572: return render_model;	
+	case  9265759122008847170: return level;			
+	}
+	return NONE;
 }

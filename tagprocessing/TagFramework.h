@@ -69,6 +69,7 @@ private:
 		uint64_t tag_structs_offset;
 		uint64_t data_references_offset;
 		uint64_t tag_fixup_references_offset;
+		uint64_t string_IDs_offset;
 		uint64_t string_table_offset;
 		uint64_t zoneset_info_offset;
 		// these three are offsets into the headerless array (so -= header.size)

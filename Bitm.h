@@ -13,7 +13,7 @@
 
 
 
-
+/* halo infinite's resource structures
 struct BitmapDataResource {
     struct BitmapDataResourceFlags {
         uint8_t content;
@@ -37,6 +37,34 @@ struct BitmapDataResource {
     uint8_t highResMipCountAndFlags;
     uint8_t mipCountPerArraySlice;
     uint8_t generated_padff1b[6];
+    int64_t runtime_data;
+    _s_tagblock<StreamingBitmapData> streamingData;
+    uint8_t generated_padb266[4];
+};
+*/
+// halo 5 resource structure
+struct BitmapDataResource {
+    struct BitmapDataResourceFlags {
+        uint8_t content;
+        bool Indicates_that_the_bitmap_data_resource_contains_a_3D_texture() { return (content & 0b00000001); }
+        bool This_bitmap_data_is_required_for_CPUgameplay__like_terrian_collision_() { return (content & 0b00000010); }
+        bool Single_Mip_Texture() { return (content & 0b00000100); }
+        bool UI_Texture() { return (content & 0b00001000); }
+    };
+    struct StreamingBitmapData {
+        int32_t offset;
+        int32_t size;
+        int32_t chunkInfo;
+    };
+    _s_data pixels;
+    int32_t hardware_format; // ??
+    int8_t tileMode;
+    uint8_t format;
+    BitmapDataResourceFlags bitmap_data_resource_flags;
+    uint8_t padding[1];
+    uint8_t highResMipCountAndFlags;
+    uint8_t mipCountPerArraySlice;
+    uint8_t generated_padff1b[10];
     int64_t runtime_data;
     _s_tagblock<StreamingBitmapData> streamingData;
     uint8_t generated_padb266[4];
@@ -285,7 +313,7 @@ struct bitm {
             bool Standard_Orientation_of_Normals_in_Angular_Space_and_Renormalize() { return (content & 0b0000100000000000); }
             bool Generate_RGB_luminance_into_alpha_channel() { return (content & 0b0001000000000000); }
         };
-        enum __swizzle_red : uint8_t {
+        enum __swizzle : uint8_t {
             Default = 0,
             Source_Red_Channel = 1,
             Source_Green_Channel = 2,
@@ -296,40 +324,7 @@ struct bitm {
             Set_to_0_5 = 7,
             Random = 8,
         };
-        enum __swizzle_green : uint8_t {
-            Default = 0,
-            Source_Red_Channel = 1,
-            Source_Green_Channel = 2,
-            Source_Blue_Channel = 3,
-            Source_Alpha_Channel = 4,
-            Set_to_1_0 = 5,
-            Set_to_0_0 = 6,
-            Set_to_0_5 = 7,
-            Random = 8,
-        };
-        enum __swizzle_blue : uint8_t {
-            Default = 0,
-            Source_Red_Channel = 1,
-            Source_Green_Channel = 2,
-            Source_Blue_Channel = 3,
-            Source_Alpha_Channel = 4,
-            Set_to_1_0 = 5,
-            Set_to_0_0 = 6,
-            Set_to_0_5 = 7,
-            Random = 8,
-        };
-        enum __swizzle_alpha : uint8_t {
-            Default = 0,
-            Source_Red_Channel = 1,
-            Source_Green_Channel = 2,
-            Source_Blue_Channel = 3,
-            Source_Alpha_Channel = 4,
-            Set_to_1_0 = 5,
-            Set_to_0_0 = 6,
-            Set_to_0_5 = 7,
-            Random = 8,
-        };
-        enum __bitmap_format : uint32_t {
+        enum class __bitmap_format : uint32_t {
             Use_Default__defined_by_usage_ = 0,
             Best_Compressed_Color_Format = 1,
             Best_Uncompressed_Color_Format = 2,
@@ -404,10 +399,10 @@ struct bitm {
         int8_t filter_radius_bias;
         __downsample_flags downsample_flags;
         _s_rgbfloat sprite_background_color;
-        __swizzle_red swizzle_red;
-        __swizzle_green swizzle_green;
-        __swizzle_blue swizzle_blue;
-        __swizzle_alpha swizzle_alpha;
+        __swizzle swizzle_red;
+        __swizzle swizzle_green;
+        __swizzle swizzle_blue;
+        __swizzle swizzle_alpha;
         __bitmap_format bitmap_format;
     };
     struct __manual_sequences_ {
