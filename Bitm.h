@@ -11,6 +11,37 @@
 #include "commons.h"
 #pragma pack(push, 1)
 
+
+
+
+struct BitmapDataResource {
+    struct BitmapDataResourceFlags {
+        uint8_t content;
+        bool Indicates_that_the_bitmap_data_resource_contains_a_3D_texture() { return (content & 0b00000001); }
+        bool This_bitmap_data_is_required_for_CPUgameplay__like_terrian_collision_() { return (content & 0b00000010); }
+        bool Single_Mip_Texture() { return (content & 0b00000100); }
+        bool UI_Texture() { return (content & 0b00001000); }
+    };
+    struct StreamingBitmapData {
+        int32_t offset;
+        int32_t size;
+        int32_t chunkInfo;
+        int32_t dimensions;
+    };
+    _s_data pixels;
+    int32_t hardware_format;
+    int8_t tileMode;
+    uint8_t format;
+    BitmapDataResourceFlags bitmap_data_resource_flags;
+    int8_t alignmentBits;
+    uint8_t highResMipCountAndFlags;
+    uint8_t mipCountPerArraySlice;
+    uint8_t generated_padff1b[6];
+    int64_t runtime_data;
+    _s_tagblock<StreamingBitmapData> streamingData;
+    uint8_t generated_padb266[4];
+};
+
 struct bitm {
     struct __internal_struct {
         int32_t global_tag_ID_;
@@ -504,8 +535,8 @@ struct bitm {
             sRGB__gamma_2_2_ = 5,
             Rec709__gamma_2_2_ = 6,
         };
-        struct __bitmap_resource_handle_ {
-        };
+        //struct __bitmap_resource_handle_ {
+        //};
         int16_t width__pixels_DO_NOT_CHANGE;
         int16_t height__pixels_DO_NOT_CHANGE;
         int8_t depth__pixels_DO_NOT_CHANGE;
@@ -521,7 +552,7 @@ struct bitm {
         uint8_t unused[1];
         int8_t interleaved_texture_index;
         float streaming_scale;
-        _s_resource<__bitmap_resource_handle_> bitmap_resource_handle_;
+        _s_resource<BitmapDataResource> bitmap_resource_handle_;
     };
     struct __xenon_bitmaps_ {
         struct __more_flags_ {
