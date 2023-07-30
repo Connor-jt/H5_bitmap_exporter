@@ -21,16 +21,18 @@ struct Tag{
 
 };
 struct resource_handle {
-    resource_handle(uint64_t _size, ifstream* _read_handle, char* _content, bool _is_chunk) {
+    resource_handle(uint64_t _size, ifstream* _read_handle, char* _content, bool _is_chunk, string _filename) {
         size = _size;
         read_handle = _read_handle;
         content = _content;
         is_chunk = _is_chunk;
+        filename = _filename;
     }
     uint64_t size;
     ifstream* read_handle;
     char* content;
     bool is_chunk;
+    string filename;
 };
 
 bool is_short_header(DXGI_FORMAT format) {
@@ -186,6 +188,7 @@ mip count 12
 tilemode 13 format 2
 *//*
 uint64_t* bit_array = new uint64_t[bitmapping_size]{
+// [chunk4][16 Mb][32 byte][4096x4096][FinalPattern].txt.txt
 0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000,
 0b100000000000000000, 0b100000000000000000, 0b100000000000000000,
 0b10000000000000000, 0b10000000000000000, 0b10000000000000000,
@@ -224,8 +227,9 @@ uint64_t* bit_array = new uint64_t[bitmapping_size]{
 2048 x 4096
 bc3_unorm__dxt5__dxt5_ (16)
 tileMode 14 format 2
-*/
+*//*
 uint64_t* bit_array = new uint64_t[bitmapping_size]{
+[chunk3][8Mb][32byte][SwizzlePattern].txt.txt
 0b100000000000000000,   0b100000000000000000, 0b100000000000000000,
 0b10000000000000000,    0b10000000000000000, 0b10000000000000000,
 0b1000000000000000,     0b1000000000000000, 0b1000000000000000,
@@ -258,6 +262,76 @@ uint64_t* bit_array = new uint64_t[bitmapping_size]{
 0b100000000000000000000000000000, 0b0, 0b0,
 0b1000000000000000000000000000000, 0b0, 0b0,
 0b10000000000000000000000000000000, 0b0, 0b0, }; // */
+/*
+uint64_t* bit_array = new uint64_t[bitmapping_size]{
+0b10000000000000000, 0b10000000000000000, 0b10000000000000000,
+0b1000000000000000, 0b1000000000000000, 0b1000000000000000,
+0b100000000000000, 0b100000000000000, 0b100000000000000,
+0b10000000000000, 0b10000001100000, 0b10000000000000,
+0b10000000, 0b1000000000000, 0b1000000000000,
+0b1000000, 0b100010000000, 0b100000000000,
+0b100000, 0b10001000000, 0b10000000000,
+0b10000000000, 0b1000000000, 0b1000000000,
+0b10, 0b100000000, 0b100000000,
+0b100000000000, 0b10001000, 0b10000000,
+0b1000000000000, 0b1010000, 0b1000000,
+0b10000, 0b100000, 0b100000,
+0b1000, 0b11000, 0b10000,
+0b100, 0b1000, 0b1000,
+0b1000000000, 0b100, 0b100,
+0b1, 0b10, 0b10,
+0b100000000, 0b1, 0b1,
+0b100000000000000000, 0b0, 0b0,
+0b1000000000000000000, 0b0, 0b0,
+0b10000000000000000000, 0b0, 0b0,
+0b100000000000000000000, 0b0, 0b0,
+0b1000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000000, 0b0, 0b0,}; */
+
+// [chunk2][1Mb][32byte][1024x1024]][SwizzlePattern].txt.txt
+uint64_t* bit_array = new uint64_t[bitmapping_size]{
+0b100000000000000, 0b100000000000000, 0b100000000000000,
+0b10000000000000, 0b10000000000000, 0b10000000000000,
+0b1000000000000, 0b1000001100000, 0b1000000000000,
+0b1000000, 0b100010000000, 0b100000000000,
+0b100000, 0b10001000000, 0b10000000000,
+0b1000000000, 0b1000000000, 0b1000000000,
+0b10, 0b100000000, 0b100000000,
+0b10000000000, 0b10001000, 0b10000000,
+0b100000000000, 0b1010000, 0b1000000,
+0b10000, 0b100000, 0b100000,
+0b1000, 0b11000, 0b10000,
+0b100, 0b1000, 0b1000,
+0b100000000, 0b100, 0b100,
+0b1, 0b10, 0b10,
+0b10000000, 0b1, 0b1,
+0b1000000000000000, 0b0, 0b0,
+0b10000000000000000, 0b0, 0b0,
+0b100000000000000000, 0b0, 0b0,
+0b1000000000000000000, 0b0, 0b0,
+0b10000000000000000000, 0b0, 0b0,
+0b100000000000000000000, 0b0, 0b0,
+0b1000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000000, 0b0, 0b0,
+};
 
 void UnSwizzle(char* pixel_buffer, uint64_t buffer_size, uint32_t pixel_stride){
     // create a new buffer to unswizzle to
@@ -349,7 +423,7 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
             resource_stream.close(); // might as well, seeing as we're reading everything right now, needs to be changed in an optimization pass
 
             bool ischunked = (current_file.substr(0, current_file.length()).find(".chunk") != std::string::npos);
-            resource_handle* new_resource = new resource_handle(resource_size, &resource_stream, resource_bytes, ischunked);
+            resource_handle* new_resource = new resource_handle(resource_size, &resource_stream, resource_bytes, ischunked, current_file);
             file_resources->push_back(*new_resource);
         }
     }
@@ -437,11 +511,36 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
 
     // instead of doing any of that, lets just pick the largest resource file
     int largest_resource_index = -1;
-    for (int i = 0; i < file_resources->size(); i++) {
-        if ((*file_resources)[i].size > image_data_size){
-            largest_resource_index = i;
-            image_data_size = (*file_resources)[i].size;
-    }}
+    //for (int i = 0; i < file_resources->size(); i++) {
+    //    if ((*file_resources)[i].size > image_data_size){
+    //        largest_resource_index = i;
+    //        image_data_size = (*file_resources)[i].size;
+    //}}
+
+    // manual resource selection
+    for (int i = 0; i < file_resources->size(); i++)
+        cout << "\n[" + std::to_string(i) + "] " + (*file_resources)[i].filename + "\n";
+
+    int number;
+    cout << "enter index of target chunk\n";
+    std::cin >> number;
+    if (number >= file_resources->size() || number < 0)
+        throw new exception("out of bounds index");
+
+    largest_resource_index = number;
+    image_data_size = (*file_resources)[largest_resource_index].size;
+
+    cout << "Enter Width, then Height\n";
+    cout << "highest dimensions are: ";
+    cout << std::to_string(meta->width) + "x" + std::to_string(meta->height);
+    cout << "\n\n";
+    std::cin >> number;
+    meta->width = number;
+
+    std::cin >> number;
+    meta->height = number;
+
+
 
     bool is_using_pixel_data = false;
     if (largest_resource_index == -1){ // resort to internal pixel buffer (the lowest resolution by the looks of it)
@@ -484,7 +583,7 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
     // //////////////// //
     if (deswizzle){
         std::cout << "Unswizzling DDS\n";
-        UnSwizzle(DDSheader_dest + header_size, image_data_size, 16L); // not sure on the stride yet
+        UnSwizzle(DDSheader_dest + header_size, image_data_size, 32L); // not sure on the stride yet
     }
 
 
@@ -536,7 +635,6 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
 
 
 
-
 int main(){
     HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think
     if (FAILED(hr))
@@ -548,7 +646,7 @@ int main(){
 
     // the mountain control? image 
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k PC\\fo05_desert_macromask_control{pc}.bitmap", deswizzle);
-    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k Xbox\\fo05_desert_macromask_control{x1}.bitmap", deswizzle);
+    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k Xbox\\fo05_desert_macromask_control{x1}.bitmap", deswizzle);
     // the mountain white image 
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k PC\\fo05_desert_terrainmacro_color{pc}.bitmap", deswizzle);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k Xbox\\fo05_desert_terrainmacro_color{x1}.bitmap", deswizzle);
@@ -556,10 +654,13 @@ int main(){
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner mp coliseum PC\\fr_mp_coliseum_techbits_b_control{pc}.bitmap", deswizzle);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner Mp Coliseum Xbox\\fr_mp_coliseum_techbits_b_control{x1}.bitmap", deswizzle);
 
-
+    // no pattern found yet
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", deswizzle);
-    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost Xbox\\ghost_hull_default_color{x1}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost Xbox\\ghost_hull_default_color{x1}.bitmap", deswizzle);
 
+    // minp_unsc console 1024 x 1024
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Mining unsc console Xbox\\minp_unsc_color{x1}.bitmap", deswizzle);
 
 
     std::cout << "exporting completed!\n";

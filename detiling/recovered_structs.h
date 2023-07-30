@@ -307,17 +307,17 @@ typedef struct XG_RESOURCE_LAYOUT {
 class XGTextureAddressComputer
 {
 public:
-	size_t GetTexelElementOffsetBytes(UINT s, UINT level, UINT x, UINT y, UINT arrayorslice, UINT sample); // REMAP THE INPUTS
-	HRESULT GetResourceLayout(XG_RESOURCE_LAYOUT* layout);
-	unsigned long Release();
+	size_t GetTexelElementOffsetBytes(UINT s, UINT level, UINT x, UINT y, UINT arrayorslice, UINT sample) { return 0L; } // REMAP THE INPUTS
+	HRESULT GetResourceLayout(XG_RESOURCE_LAYOUT* layout) { return S_OK; }
+	unsigned long Release() { return 0L; }
 };
 
-bool LoadScanline(DirectX::XMVECTOR* tiled, UINT32 tiledPixels, const uint8_t* xboximg_ptr, UINT bitmap_sizebytes, DXGI_FORMAT format);
-bool StoreScanline(uint8_t* pixels, size_t rowPitch, DXGI_FORMAT format, DirectX::XMVECTOR* target, size_t width);
+bool LoadScanline(DirectX::XMVECTOR* tiled, UINT32 tiledPixels, const uint8_t* xboximg_ptr, UINT bitmap_sizebytes, DXGI_FORMAT format) { return true; }
+bool StoreScanline(uint8_t* pixels, size_t rowPitch, DXGI_FORMAT format, DirectX::XMVECTOR* target, size_t width) { return true; }
 
-HRESULT XGCreateTexture1DComputer(XG_TEXTURE1D_DESC* texdata, XGTextureAddressComputer** computer);
-HRESULT XGCreateTexture2DComputer(XG_TEXTURE2D_DESC* texdata, XGTextureAddressComputer** computer);
-HRESULT XGCreateTexture3DComputer(XG_TEXTURE3D_DESC* texdata, XGTextureAddressComputer** computer);
+HRESULT XGCreateTexture1DComputer(XG_TEXTURE1D_DESC* texdata, XGTextureAddressComputer** computer) { return S_OK; }
+HRESULT XGCreateTexture2DComputer(XG_TEXTURE2D_DESC* texdata, XGTextureAddressComputer** computer) { return S_OK; }
+HRESULT XGCreateTexture3DComputer(XG_TEXTURE3D_DESC* texdata, XGTextureAddressComputer** computer) { return S_OK; }
 
 #pragma pack(pop)
 /*

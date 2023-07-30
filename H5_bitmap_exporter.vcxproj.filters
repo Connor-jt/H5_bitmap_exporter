@@ -44,10 +44,10 @@
     <ClInclude Include="detiling\DirectXTexXbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="detiling\scoped.h">
+    <ClInclude Include="detiling\recovered_structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="detiling\recovered_structs.h">
+    <ClInclude Include="detiling\scoped.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
