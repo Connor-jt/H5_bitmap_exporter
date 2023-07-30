@@ -142,7 +142,7 @@ int32_t GetFormat(uint16_t tagformat){
 
 
 // regular mapping
-uint32_t bitmapping_size = 32;
+uint32_t bitmapping_size = 96;
 /*uint64_t* bit_array = new uint64_t[bitmapping_size]{
 0b0000000000000000000000000000000000000000000000000000000000000001,
 0b0000000000000000000000000000000000000000000000000000000000000010,
@@ -184,107 +184,80 @@ uint32_t bitmapping_size = 32;
 bc7_unorm__dxt5_blue_ (49)
 mip count 12
 tilemode 13 format 2
-*/
-/*uint64_t* bit_array = new uint64_t[bitmapping_size]{
-    0b10,
-    0b1000,
-    0b100000,
-    0b1000000,
-    0b10000000,
-    0b100000000,
-    0b1000000000,
-    0b10000000000,
-    0b100000000000,
-    0b1,
-    0b100,
-    0b10000,
-    0b1000000000000,
-    0b10000000000000,
-    0b100000000000000,
-    0b1000000000000000,
-    0b10000000000000000,
-    0b100000000000000000,
-    0b1000000000000000000,
-    0b10000000000000000000,
-    0b100000000000000000000,
-    0b1000000000000000000000,
-    0b10000000000000000000000,
-    0b100000000000000000000000,
-    0b1000000000000000000000000,
-    0b10000000000000000000000000,
-    0b100000000000000000000000000,
-    0b1000000000000000000000000000,
-    0b10000000000000000000000000000,
-    0b100000000000000000000000000000,
-    0b1000000000000000000000000000000,
-    0b10000000000000000000000000000000, }; // */
-
+*//*
 uint64_t* bit_array = new uint64_t[bitmapping_size]{
-    0b10,
-    0b100000000,
-    0b1000,
-    0b11000,
-    0b100000,
-    0b10001000000,
-    0b100010000000,
-    0b1000000000000,
-    0b10000000000000,
-    0b1,
-    0b100,
-    0b1000000000,
-    0b10001000,
-    0b1010000,
-    0b100000001100000,
-    0b1000000000000000,
-    0b10000000000000000,
-    0b100000000000000000,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,};
-uint64_t* bitmask_array = new uint64_t[bitmapping_size]{
-    0b10,
-    0b100000000,
-    0b1000,
-    0b10000,
-    0b100000,
-    0b10000000000,
-    0b100000000000,
-    0b1000000000000,
-    0b10000000000000,
-    0b1,
-    0b100,
-    0b1000000000,
-    0b10000000,
-    0b1000000,
-    0b100000000000000,
-    0b1000000000000000,
-    0b10000000000000000,
-    0b100000000000000000,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0,
-    0b0, };
+0b1000000000000000000, 0b1000000000000000000, 0b1000000000000000000,
+0b100000000000000000, 0b100000000000000000, 0b100000000000000000,
+0b10000000000000000, 0b10000000000000000, 0b10000000000000000,
+0b1000000000000000, 0b1000000000000000, 0b1000000000000000,
+0b100000000000000, 0b100000000000000, 0b100000000000000,
+0b10000000000000, 0b10000000000000, 0b10000000000000,
+0b1000000000000, 0b1000000000000, 0b1000000000000,
+0b100000000, 0b100000000000, 0b100000000000,
+0b10000000, 0b10000000000, 0b10000000000,
+0b1000000, 0b1000000000, 0b1000000000,
+0b100000, 0b100000000, 0b100000000,
+0b10000, 0b10000000, 0b10000000,
+0b1000, 0b1000000, 0b1000000,
+0b100, 0b100000, 0b100000,
+0b100000000000, 0b10000, 0b10000,
+0b10, 0b1000, 0b1000,
+0b10000000000, 0b100, 0b100,
+0b1, 0b10, 0b10,
+0b1000000000, 0b1, 0b1,
+0b10000000000000000000, 0b0, 0b0,
+0b100000000000000000000, 0b0, 0b0,
+0b1000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000000, 0b0, 0b0, }; // */
+
+
+/*
+2048 x 4096
+bc3_unorm__dxt5__dxt5_ (16)
+tileMode 14 format 2
+*/
+uint64_t* bit_array = new uint64_t[bitmapping_size]{
+0b100000000000000000,   0b100000000000000000, 0b100000000000000000,
+0b10000000000000000,    0b10000000000000000, 0b10000000000000000,
+0b1000000000000000,     0b1000000000000000, 0b1000000000000000,
+0b100000000000000,      0b100000001100000, 0b100000000000000,
+0b100000000,            0b10000000000000, 0b10000000000000,
+0b10000000,             0b1000000000000, 0b1000000000000,
+0b1000000,              0b100010000000, 0b100000000000,
+0b100000,               0b10001000000, 0b10000000000,
+0b100000000000,         0b1000000000, 0b1000000000,
+0b10,                   0b100000000, 0b100000000,
+0b1000000000000,        0b10001000, 0b10000000,
+0b10000000000000,       0b1010000, 0b1000000,
+0b10000,                0b100000, 0b100000,
+0b1000,                 0b11000, 0b10000,
+0b100,                  0b1000, 0b1000,
+0b10000000000,          0b100, 0b100,
+0b1,                    0b10, 0b10,
+0b1000000000,           0b1, 0b1,
+0b1000000000000000000, 0b0, 0b0,
+0b10000000000000000000, 0b0, 0b0,
+0b100000000000000000000, 0b0, 0b0,
+0b1000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000, 0b0, 0b0,
+0b100000000000000000000000000000, 0b0, 0b0,
+0b1000000000000000000000000000000, 0b0, 0b0,
+0b10000000000000000000000000000000, 0b0, 0b0, }; // */
 
 void UnSwizzle(char* pixel_buffer, uint64_t buffer_size, uint32_t pixel_stride){
     // create a new buffer to unswizzle to
@@ -296,14 +269,15 @@ void UnSwizzle(char* pixel_buffer, uint64_t buffer_size, uint32_t pixel_stride){
     for (uint64_t pixel_index = 0; pixel_index < pixel_count; pixel_index++){
         uint64_t active_pixel_address = pixel_index;
         uint64_t address = 0;
-        for (int32_t i = bitmapping_size-1; i >= 0; i--)
-            if ((bit_array[i]) != 0) // no point in processing the empty plots
+        for (int32_t i = 0; i < bitmapping_size; i+=3)
+
+            if (bit_array[i+1] != 0) // no point in processing the empty plots
 
                 // hmm, we have to ensure that at the first bit is active, second bit doesn't matter but still has to be xor'd
 
-                if (((active_pixel_address & (bit_array[i]))) >= (bitmask_array[i])){
-                    active_pixel_address ^= (bit_array[i]); // this is so when we XOR, it will affect the later bits
-                    address |= uint64_t(1) << i;
+                if ((active_pixel_address & bit_array[i+1]) >= bit_array[i+2]){
+                    active_pixel_address ^= bit_array[i+1]; // this is so when we XOR, it will affect the later bits
+                    address |= bit_array[i];
                 }
 
         if (active_pixel_address != 0)
@@ -379,6 +353,11 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
             file_resources->push_back(*new_resource);
         }
     }
+
+
+
+
+
 
 
     // //////////////////////////////////////////// //
@@ -505,7 +484,7 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
     // //////////////// //
     if (deswizzle){
         std::cout << "Unswizzling DDS\n";
-        UnSwizzle(DDSheader_dest + header_size, image_data_size, 32L); // not sure on the stride yet
+        UnSwizzle(DDSheader_dest + header_size, image_data_size, 16L); // not sure on the stride yet
     }
 
 
@@ -573,9 +552,15 @@ int main(){
     // the mountain white image 
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k PC\\fo05_desert_terrainmacro_color{pc}.bitmap", deswizzle);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k Xbox\\fo05_desert_terrainmacro_color{x1}.bitmap", deswizzle);
-    // some random armor looking thing 
+    // forerunner thing // NO VALID PATTERN
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner mp coliseum PC\\fr_mp_coliseum_techbits_b_control{pc}.bitmap", deswizzle);
-    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner Mp Coliseum Xbox\\fr_mp_coliseum_techbits_b_control{x1}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner Mp Coliseum Xbox\\fr_mp_coliseum_techbits_b_control{x1}.bitmap", deswizzle);
+
+
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", deswizzle);
+    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost Xbox\\ghost_hull_default_color{x1}.bitmap", deswizzle);
+
+
 
     std::cout << "exporting completed!\n";
 }

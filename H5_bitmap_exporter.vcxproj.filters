@@ -21,6 +21,9 @@
     <ClCompile Include="tagprocessing\TagFramework.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="detiling\DirectXTexXboxDetile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bitm.h">
@@ -33,6 +36,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tagprocessing\TagStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detiling\DirectXTexp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detiling\DirectXTexXbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detiling\scoped.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detiling\recovered_structs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
