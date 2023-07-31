@@ -30,11 +30,17 @@ externXGCreateTexture3DComputer* ref_XGCreateTexture3DComputer;
 typedef XG_TILE_MODE __stdcall externXGComputeOptimalTileMode(XG_RESOURCE_DIMENSION dimension, XG_FORMAT format, UINT width, UINT height, UINT depth__, UINT something, XG_BIND_FLAG bind_flag); // { return (XG_TILE_MODE)0; }
 externXGComputeOptimalTileMode* ref_XGComputeOptimalTileMode;
 
+#include <strsafe.h>
 void VerifyDll() {
     if (IsDllLoaded) return;
 
     HINSTANCE mod = LoadLibrary(L"xg.dll");
-    if (!mod) throw new std::exception("xg module failed to load");
+    if (!mod)
+    {
+        LPVOID lpMsgBuf;
+        DWORD dw = GetLastError();
+        throw new std::exception("xg module failed to load");
+    }
 
     ref_LoadScanline = (externLoadScanline*)GetProcAddress(mod, "LoadScanline");
     //ref__LoadScanline = (extern_LoadScanline*)GetProcAddress(mod, "_LoadScanline");

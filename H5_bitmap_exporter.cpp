@@ -519,7 +519,7 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
     meta->depth = selected_bitmap->depth__pixels_DO_NOT_CHANGE;
     meta->arraySize = 1; // no support for array types yet
     meta->mipLevels = 0; // it seems this does not apply for all versions // selected_bitmap->mipmap_count;
-    meta->miscFlags = 0; // the only flag seems to be TEX_MISC_TEXTURECUBE = 0x4
+    meta->miscFlags = 8000000; // i think this enables tile mode // the only flag seems to be TEX_MISC_TEXTURECUBE = 0x4
     meta->miscFlags2 = 0;
     meta->dimension = (DirectX::TEX_DIMENSION)3; // TEX_DIMENSION_TEXTURE2D
 
@@ -573,10 +573,9 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
     HRESULT hr = EncodeDDSHeader(*meta, DirectX::DDS_FLAGS_NONE, (void*)DDSheader_dest, header_size, output_size);
     if (!SUCCEEDED(hr))
         throw new exception("image failed to generate DDS header");
-    if (header_size != output_size)
+    if (!is_xbox && header_size != output_size) // if its xbox, then we're going to get an output size smaller than our header everytime
         // DXGI_FORMAT_BC1_UNORM_SRGB (72) is actually long header? // TODO??
         throw new exception("header size was incorrectly assumed! must investigate this image format!!!");
-
 
 
 
@@ -588,6 +587,7 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
         memcpy(DDSheader_dest + header_size, (*file_resources)[largest_resource_index].content, image_data_size);
         //OpenTagResource(tag, resource_index, DDSheader_dest + header_size, image_data_size);
 
+    DirectX::ScratchImage* DDS_image = nullptr;
     // ////////////////// //
     // UNSWIZZLE TEXTURE //
     // //////////////// //
@@ -596,7 +596,7 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
         static_assert(sizeof(DDS_HEADER_XBOX_p) == 36, "DDS XBOX Header size mismatch");
 
 
-        DDS_HEADER_p* encoded_header = (DDS_HEADER_p*)DDSheader_dest + sizeof(uint32_t);
+        DDS_HEADER_p* encoded_header = (DDS_HEADER_p*)(DDSheader_dest + sizeof(uint32_t));
         encoded_header->ddspf.flags |= 4; // DDS_FOURCC
         encoded_header->ddspf.fourCC = 0x584F4258; // 'XBOX' backwards
 
@@ -604,20 +604,40 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
         // if (!(pHeader->ddspf.flags & DDS_FOURCC)
         // || (MAKEFOURCC('X', 'B', 'O', 'X') != pHeader->ddspf.fourCC))
 
-        DDS_HEADER_XBOX_p* encoded_xbox_header = (DDS_HEADER_XBOX_p*)DDSheader_dest + sizeof(uint32_t) + 124; // sizeof(DirectX::DDS_HEADER);
+        DDS_HEADER_XBOX_p* encoded_xbox_header = (DDS_HEADER_XBOX_p*)(DDSheader_dest + sizeof(uint32_t) + 124); // sizeof(DirectX::DDS_HEADER);
         // luckily, if the original format was the DX10 header, then it encodes the first 5 parameters for this header: dxgiFormat, resourceDimension, miscFlag, arraySize & miscFlags2
         // thats because we just pretend its a regular DDS header, and are converting it in place (which works because the xbox version is larger than the regular one)
-        encoded_xbox_header->tileMode = Xbox::c_XboxTileModeLinear;
-        encoded_xbox_header->baseAlignment = 2;
-        encoded_xbox_header->dataSize = image_data_size; // not sure about this one
+        // ok apparently theres a few textures that do NOT use the DX10 extension, so we have to write that data anyway !!!!
+        if (is_short_header(meta->format)){
+            encoded_xbox_header->dxgiFormat = meta->format;
+            encoded_xbox_header->resourceDimension = meta->dimension;
+            encoded_xbox_header->miscFlag = meta->miscFlags & ~4; // TEX_MISC_TEXTURECUBE; // this is just what is done in the regular encode
+            // something something array count | TEX_MISC_TEXTURECUBE flag
+            encoded_xbox_header->arraySize = meta->arraySize;
+            encoded_xbox_header->miscFlags2 = meta->miscFlags2;
+        }
+
+        encoded_xbox_header->tileMode = bitmap_details->tileMode; // bitmap_details->tileMode; // Xbox::c_XboxTileModeLinear;
+        encoded_xbox_header->baseAlignment = 1; // can be anything other than 0??
+        encoded_xbox_header->dataSize = image_data_size;
         encoded_xbox_header->xdkVer = 0;
 
         // ok, now our image should be good for loading
         DirectX::TexMetadata* test = nullptr;
-        Xbox::XboxImage* out_image = new Xbox::XboxImage();
-        HRESULT hr = Xbox::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, test, *out_image);
+        Xbox::XboxImage* xbox_image = new Xbox::XboxImage();
+        HRESULT hr = Xbox::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, test, *xbox_image);
         if (!SUCCEEDED(hr))
             throw new exception("failed to load xbox encoded image");
+
+        //int placeholder;
+        //std::cout << "input a number and then enter to continue (ATTACH DEBUGGER)\n";
+        //std:cin >> placeholder;
+
+        DDS_image = new DirectX::ScratchImage();
+        hr = Xbox::Detile(*xbox_image, *DDS_image);
+        if (!SUCCEEDED(hr))
+            throw new exception("failed to detile xbox image");
+
 
         /* // we need to write the header with whatever data we have
         
@@ -641,16 +661,18 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
 
 
 
-        UnSwizzle(DDSheader_dest + header_size, image_data_size, 32L); // not sure on the stride yet
+        //UnSwizzle(DDSheader_dest + header_size, image_data_size, 32L); // not sure on the stride yet
+    }
+    else
+    {
+        std::cout << "loading bitmap as DDS\n";
+        // and then we should have a fully loaded dds image in mem, which we should beable to now export for testing purposes
+        DirectX::ScratchImage* DDS_image = new DirectX::ScratchImage();
+        hr = DirectX::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, (DirectX::DDS_FLAGS)0, nullptr, *DDS_image);
+        if (FAILED(hr))
+            throw new exception("failed to load DDS from memory");
     }
 
-
-    std::cout << "loading bitmap as DDS\n";
-    // and then we should have a fully loaded dds image in mem, which we should beable to now export for testing purposes
-    DirectX::ScratchImage* DDS_image = new DirectX::ScratchImage();
-    hr = DirectX::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, (DirectX::DDS_FLAGS)0, nullptr, *DDS_image);
-    if (FAILED(hr))
-        throw new exception("failed to load DDS from memory");
     // we need to export via WIC file, so no extra tool is required to actually finish the conversion
 
     // if BC, then we need to decompress the image to convert it
@@ -704,7 +726,7 @@ int main(){
 
     // the mountain control? image 
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k PC\\fo05_desert_macromask_control{pc}.bitmap", false);
-    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k Xbox\\fo05_desert_macromask_control{x1}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k Xbox\\fo05_desert_macromask_control{x1}.bitmap", deswizzle);
     // the mountain white image 
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k PC\\fo05_desert_terrainmacro_color{pc}.bitmap", false);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k Xbox\\fo05_desert_terrainmacro_color{x1}.bitmap", deswizzle);
@@ -719,6 +741,13 @@ int main(){
     // minp_unsc console 1024 x 1024
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", false);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Mining unsc console Xbox\\minp_unsc_color{x1}.bitmap", deswizzle);
+
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner Mp Coliseum Xbox\\fr_mp_coliseum_tile_techy_control{x1}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Mining unsc console Xbox\\minp_unsc_color{x1}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Mining unsc console Xbox\\minp_unsc_console_diff{x1}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Mining unsc console Xbox\\minp_unsc_console_normal{x1}.bitmap", deswizzle);
+    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\sang debris e Xbox\\sanp_debris_pile_e_color{x1}.bitmap", deswizzle);
+    BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Warthog Camo Xbox\\warthog_hull_camo_color{x1}.bitmap", deswizzle);
 
 
     std::cout << "exporting completed!\n";

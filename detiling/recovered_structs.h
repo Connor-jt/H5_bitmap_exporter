@@ -244,8 +244,8 @@ typedef struct XG_TEXTURE2D_DESC{
 	XG_BIND_FLAG BindFlags;
 	XG_CPU_ACCESS_FLAG CPUAccessFlags;
 	XG_RESOURCE_MISC_FLAG MiscFlags;
-	//UINT ESRAMOffsetBytes; // im pretty sure these are only for the ESRAM example
-	//UINT ESRAMUsageBytes;
+	UINT ESRAMOffsetBytes; // im pretty sure these are only for the ESRAM example
+	UINT ESRAMUsageBytes;
 	XG_TILE_MODE TileMode;
 	UINT Pitch;
 };
@@ -293,29 +293,44 @@ typedef struct XG_mipmap{
 	UINT Slice2DSizeBytes;
 };
 // NOT REAL STRUCT // USED TO GET THIS TO COMPILE //
+// sizeof = 1480 bytes (?) theres no way it can be that many	
 typedef struct XG_plane{
-	XG_mipmap* MipLayout;
-	size_t BytesPerElement;
+	size_t BytesPerElement; // correct 
+	XG_mipmap* MipLayout; // not correct at all?
 };
 
-// size should be 1720 bytes (?) sourced from the decompiled 'GetResourceLayout' function
+// size should be 5920 bytes (?) sourced from the decompiled 'GetResourceLayout' function
 typedef struct XG_RESOURCE_LAYOUT {
-	UINT SizeBytes; // im pretty sure this is right, judging by the decompiled code of the xg.dll
-	// these are just to remove the errors aka incorrect mappings
-	UINT Planes;
-	XG_plane* Plane;
-	UINT Dimension;
-	UINT MipLevels;
-	UINT BaseAlignmentBytes;
+	UINT64 SizeBytes; // 0x0 // correct
+	UINT64 BaseAlignmentBytes; // 0x8 // correct
+	UINT Planes; // 0x10 // maybe correct
+	UINT Dimension; // 0x14 // not correct?
+	UINT MipLevels; // 0x18 // not correct?
+	char padding[0x1C]; // 0x1C
+	XG_plane* Plane; // 0x38 // correct
 
 };
+// these i have absolutely no idea on, BUT i only need them to exist, and not have any specific length
+typedef struct XG_PACKED_MIP_DESC {};
+typedef struct XG_TILE_SHAPE {};
+typedef struct XG_SUBRESOURCE_TILING {};
+typedef struct XG_DESCRIPTOR_TEXTURE_VIEW {};
 
 class XGTextureAddressComputer
 {
-public:
-	size_t GetTexelElementOffsetBytes(UINT s, UINT level, UINT x, UINT y, UINT arrayorslice, UINT sample) { return 0L; } // REMAP THE INPUTS
-	HRESULT GetResourceLayout(XG_RESOURCE_LAYOUT* layout) { return S_OK; }
-	unsigned long Release() { return 0L; }
+public: // i have no idea if this actually works, worst case scenario: my computer blows up // holy mc moly, it actually works
+	virtual UINT    AddRef() { return 621; };
+	virtual UINT    Release() { return 621; };
+	virtual HRESULT GetResourceLayout(XG_RESOURCE_LAYOUT* layout) { return 621; };
+	virtual UINT64  GetResourceSizeBytes() { return 621; };
+	virtual UINT64  GetResourceBaseAlignmentBytes() { return 621; };
+	virtual UINT64  GetMipLevelOffsetBytes(UINT param_1, UINT param_2) { return 621; };
+	virtual UINT64	GetTexelElementOffsetBytes(UINT Plane, UINT MipLevel, UINT64 X, UINT Y, UINT ZOrSlice, UINT Sample) { return 621; };
+	virtual HRESULT GetTexelCoordinate(UINT64 param_1, UINT* out_texture_index, UINT* param_3, UINT64* param_4, UINT* param_5, UINT* param_6, UINT* param_7) { return 621; };
+	virtual HRESULT CopyIntoSubresource(void* param_1, UINT param_2, UINT param_3, void* param_4, UINT param_5, UINT param_6) { return 621; };
+	virtual HRESULT CopyFromSubresource(void* param_1, UINT param_2, UINT param_3, void* param_4, UINT param_5, UINT param_6) { return 621; };
+	virtual HRESULT GetResourceTiling(UINT* param_1, XG_PACKED_MIP_DESC* param_2, XG_TILE_SHAPE* param_3, UINT* param_4, UINT param_5, XG_SUBRESOURCE_TILING* param_6) { return 621; };
+	virtual HRESULT GetTextureViewDescriptor(UINT PlaneIndex, XG_DESCRIPTOR_TEXTURE_VIEW* TexView) { return 621; };
 };
 namespace XG_DLL{
 	extern bool LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }
@@ -329,7 +344,34 @@ namespace XG_DLL{
 	extern HRESULT XGCreateTexture3DComputer(XG_TEXTURE3D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
 	extern XG_TILE_MODE XGComputeOptimalTileMode(XG_RESOURCE_DIMENSION dimension, XG_FORMAT format, UINT width, UINT height, UINT depth__, UINT something, XG_BIND_FLAG bind_flag); // { return (XG_TILE_MODE)0; }
 
-
+	// texture computer functions
+	//UINT AddRef(XGTextureAddressComputer* computer);
+//UINT Release(XGTextureAddressComputer* computer);
+//HRESULT  GetResourceLayout(XGTextureAddressComputer* computer, XG_RESOURCE_LAYOUT* layout);
+	//UINT64 GetResourceSizeBytes(XGTextureAddressComputer* computer);
+	//UINT64 GetResourceBaseAlignmentBytes(XGTextureAddressComputer* computer);
+	//UINT64 GetMipLevelOffsetBytes(XGTextureAddressComputer* computer, uint param_1, uint param_2);
+//UINT64 GetTexelElementOffsetBytes(XGTextureAddressComputer* computer, UINT Plane, UINT MipLevel, UINT64 X, UINT Y, UINT ZOrSlice, UINT Sample);
+	//HRESULT GetTexelCoordinate(XGTextureAddressComputer* computer, __uint64 param_1, uint* out_texture_index, uint* param_3, __uint64* param_4, uint* param_5, uint* param_6, uint* param_7);
+	//HRESULT CopyIntoSubresource(XGTextureAddressComputer* computer, void* param_1, uint param_2, uint param_3, void* param_4, uint param_5, uint param_6);
+	//HRESULT CopyFromSubresource(XGTextureAddressComputer* computer, void* param_1, uint param_2, uint param_3, void* param_4, uint param_5, uint param_6);
+	//HRESULT GetResourceTiling(XGTextureAddressComputer* computer, uint* param_1, XG_PACKED_MIP_DESC* param_2, XG_TILE_SHAPE* param_3, uint* param_4, uint param_5, XG_SUBRESOURCE_TILING* param_6);
+	//HRESULT GetTextureViewDescriptor(XGTextureAddressComputer* computer, uint PlaneIndex, XG_DESCRIPTOR_TEXTURE_VIEW* TexView);
+	/*
+	Computer functions;
+	0. 00007FFA16F813A0  13A0 ulong __thiscall CTextureAddressComputer::AddRef(CTextureAddressComputer *this)
+	1. 00007FFA16F813B0  13B0 ulong __thiscall CTextureAddressComputer::Release(CTextureAddressComputer *this)
+	2. 00007FFA16F813F0  13F0  long __thiscall CTextureAddressComputer::GetResourceLayout(CTextureAddressComputer *this,XG_RESOURCE_LAYOUT *layout)
+	3. 00007FFA16F81480  1480 __uint64 __thiscall CTextureAddressComputer::GetResourceSizeBytes(CTextureAddressComputer *this)
+	4. 00007FFA16F81490  1490 __uint64 __thiscall CTextureAddressComputer::GetResourceBaseAlignmentBytes(CTextureAddressComputer *this)
+	5. 00007FFA16F82C40  2C40 __uint64 __thiscall CTextureAddressComputer::GetMipLevelOffsetBytes (CTextureAddressComputer *this,uint param_1,uint param_2)
+	6. 00007FFA16F82C80  2C80 __uint64 __thiscall CTextureAddressComputer::GetTexelElementOffsetBytes (CTextureAddressComputer *this,uint Plane,uint MipLevel,__uint64 X,uint Y,uint ZOrSlice, uint Sample)
+	7. 00007FFA16F82D50  2D50 long __thiscall CTextureAddressComputer::GetTexelCoordinate (CTextureAddressComputer *this,__uint64 param_1,uint *out_texture_index,uint *param_3, __uint64 *param_4,uint *param_5,uint *param_6,uint *param_7)
+	8. 00007FFA16F82EE0  2EE0 long __thiscall CTextureAddressComputer::CopyIntoSubresource (CTextureAddressComputer *this,void *param_1,uint param_2,uint param_3,void *param_4, uint param_5,uint param_6)
+	9. 00007FFA16F83370  3370 long __thiscall CTextureAddressComputer::CopyFromSubresource (CTextureAddressComputer *this,void *param_1,uint param_2,uint param_3,void *param_4, uint param_5,uint param_6)
+	10.00007FFA16F84670  4670 long __thiscall CTextureAddressComputer::GetResourceTiling (CTextureAddressComputer *this,uint *param_1,XG_PACKED_MIP_DESC *param_2, XG_TILE_SHAPE *param_3,uint *param_4,uint param_5,XG_SUBRESOURCE_TILING *param_6)
+	11.00007FFA16F83700  3700 long __thiscall CTextureAddressComputer::GetTextureViewDescriptor (CTextureAddressComputer *this,uint PlaneIndex,XG_DESCRIPTOR_TEXTURE_VIEW *TexView)
+	*/
 
 	// management stuff
 };
