@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <algorithm>
 
+#include "detiling/DirectXTexXbox.h"
 
 
 struct Tag{
@@ -295,25 +296,26 @@ uint64_t* bit_array = new uint64_t[bitmapping_size]{
 0b10000000000000000000000000000, 0b0, 0b0,
 0b100000000000000000000000000000, 0b0, 0b0,
 0b1000000000000000000000000000000, 0b0, 0b0,
-0b10000000000000000000000000000000, 0b0, 0b0,}; */
+0b10000000000000000000000000000000, 0b0, 0b0,}; // */
 
 // [chunk2][1Mb][32byte][1024x1024]][SwizzlePattern].txt.txt
 uint64_t* bit_array = new uint64_t[bitmapping_size]{
-0b100000000000000, 0b100000000000000, 0b100000000000000,
-0b10000000000000, 0b10000000000000, 0b10000000000000,
-0b1000000000000, 0b1000001100000, 0b1000000000000,
-0b1000000, 0b100010000000, 0b100000000000,
-0b100000, 0b10001000000, 0b10000000000,
-0b1000000000, 0b1000000000, 0b1000000000,
-0b10, 0b100000000, 0b100000000,
-0b10000000000, 0b10001000, 0b10000000,
-0b100000000000, 0b1010000, 0b1000000,
-0b10000, 0b100000, 0b100000,
-0b1000, 0b11000, 0b10000,
-0b100, 0b1000, 0b1000,
-0b100000000, 0b100, 0b100,
-0b1, 0b10, 0b10,
-0b10000000, 0b1, 0b1,
+0b100000000000000,  0b100000000000000, 0b100000000000000,
+0b10000000000000,   0b10000000000000, 0b10000000000000,
+0b1000000000000,    0b1000001100000, 0b1000000000000,
+0b1000000,          0b100010000000, 0b100000000000,
+0b100000,           0b10001000000, 0b10000000000,
+0b1000000000,       0b1000000000, 0b1000000000,
+0b10,               0b100000000, 0b100000000,
+0b10000000000,      0b10001000, 0b10000000,
+0b100000000000,     0b1010000, 0b1000000,
+0b10000,            0b100000, 0b100000,
+0b1000,             0b11000, 0b10000,
+0b100,              0b1000, 0b1000,
+0b100000000,        0b100, 0b100,
+0b1,                0b10, 0b10,
+0b10000000,         0b1, 0b1,
+
 0b1000000000000000, 0b0, 0b0,
 0b10000000000000000, 0b0, 0b0,
 0b100000000000000000, 0b0, 0b0,
@@ -330,8 +332,7 @@ uint64_t* bit_array = new uint64_t[bitmapping_size]{
 0b10000000000000000000000000000, 0b0, 0b0,
 0b100000000000000000000000000000, 0b0, 0b0,
 0b1000000000000000000000000000000, 0b0, 0b0,
-0b10000000000000000000000000000000, 0b0, 0b0,
-};
+0b10000000000000000000000000000000, 0b0, 0b0,}; // */
 
 void UnSwizzle(char* pixel_buffer, uint64_t buffer_size, uint32_t pixel_stride){
     // create a new buffer to unswizzle to
@@ -363,7 +364,9 @@ void UnSwizzle(char* pixel_buffer, uint64_t buffer_size, uint32_t pixel_stride){
     delete[] reference_buffer;
 }
 
-void BITM_GetTexture(std::string filepath, bool deswizzle) {
+
+
+void BITM_GetTexture(std::string filepath, bool is_xbox) {
 
     // /////////////////////////// //
     // READ BITMAP FILE & PROCESS //
@@ -466,58 +469,17 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
 
     BitmapDataResource* bitmap_details = selected_bitmap->bitmap_resource_handle_.content_ptr;
 
-    DirectX::TexMetadata* meta = new DirectX::TexMetadata();
-
-    // configure meta data
-
-    meta->depth = selected_bitmap->depth__pixels_DO_NOT_CHANGE;
-    meta->arraySize = 1; // no support for array types yet
-    meta->mipLevels = 0; // it seems this does not apply for all versions // selected_bitmap->mipmap_count;
-    meta->miscFlags = 0; // the only flag seems to be TEX_MISC_TEXTURECUBE = 0x4
-    meta->miscFlags2 = 0;
-    meta->dimension = (DirectX::TEX_DIMENSION)3; // TEX_DIMENSION_TEXTURE2D
-
-    // test format
-    uint32_t bitm_format = GetFormat(selected_bitmap->format__DO_NOT_CHANGE);
-    if (bitm_format == -1)
-        throw new exception("unsupported bitmap format");
-    meta->format = (DXGI_FORMAT)bitm_format;
-
-
-    size_t header_size = sizeof(uint32_t) + 124; // sizeof(DirectX::DDS_HEADER);
-    if (!is_short_header(meta->format)) header_size += 20; // sizeof(DirectX::DDS_HEADER_DXT10);
 
     size_t image_data_size = 0;
-    meta->width = selected_bitmap->width__pixels_DO_NOT_CHANGE;
-    meta->height = selected_bitmap->height__pixels_DO_NOT_CHANGE;
-    // figure out if this texture is using internal data, or resource data
-
-
-    /* leftover for if reading streaming data is ever needed
-    if (bitmap_details->streamingData.count == 0)
-        throw new exception("no streaming data or pixel data");
-
-    uint32_t index = 0; // probably the lowest quality // select the image that we want to be using
-    if (index >= bitmap_details->streamingData.count)
-        throw new exception("out of bounds index for streaming texture array");
-
-    // we do not actually use streamingdata, because it contains virtually nothing useful
-    // the only thing it really tells us anything is MAYBE the chunkinfo
-    // it looks like that just tells us how many blocks of 256 our image contains
-    // so to calculate the dimensions (assuming the image is square), we would use this formula
-    // dimensions = Math.sqrt(chunkinfo) * 256 // idk what that is in c++
-    */
-
-
     // instead of doing any of that, lets just pick the largest resource file
     int largest_resource_index = -1;
-    //for (int i = 0; i < file_resources->size(); i++) {
-    //    if ((*file_resources)[i].size > image_data_size){
-    //        largest_resource_index = i;
-    //        image_data_size = (*file_resources)[i].size;
-    //}}
+    for (int i = 0; i < file_resources->size(); i++) {
+        if ((*file_resources)[i].size > image_data_size) {
+            largest_resource_index = i;
+            image_data_size = (*file_resources)[i].size;
+    }}
 
-    // manual resource selection
+    /* // manual resource selection
     for (int i = 0; i < file_resources->size(); i++)
         cout << "\n[" + std::to_string(i) + "] " + (*file_resources)[i].filename + "\n";
 
@@ -538,18 +500,63 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
     meta->width = number;
 
     std::cin >> number;
-    meta->height = number;
-
+    meta->height = number; // */
 
 
     bool is_using_pixel_data = false;
-    if (largest_resource_index == -1){ // resort to internal pixel buffer (the lowest resolution by the looks of it)
+    if (largest_resource_index == -1) { // resort to internal pixel buffer (the lowest resolution by the looks of it)
         is_using_pixel_data = true;
         image_data_size = bitmap_details->pixels.data_size;
     }
 
     if (image_data_size == 0)
         throw new exception("no pixels to export from this image, possible read logic failure");
+
+    size_t header_size = sizeof(uint32_t) + 124; // sizeof(DirectX::DDS_HEADER);
+    
+    // configure meta data
+    DirectX::TexMetadata* meta = new DirectX::TexMetadata();
+    meta->depth = selected_bitmap->depth__pixels_DO_NOT_CHANGE;
+    meta->arraySize = 1; // no support for array types yet
+    meta->mipLevels = 0; // it seems this does not apply for all versions // selected_bitmap->mipmap_count;
+    meta->miscFlags = 0; // the only flag seems to be TEX_MISC_TEXTURECUBE = 0x4
+    meta->miscFlags2 = 0;
+    meta->dimension = (DirectX::TEX_DIMENSION)3; // TEX_DIMENSION_TEXTURE2D
+
+    // test format
+    uint32_t bitm_format = GetFormat(selected_bitmap->format__DO_NOT_CHANGE);
+    if (bitm_format == -1)
+        throw new exception("unsupported bitmap format");
+    meta->format = (DXGI_FORMAT)bitm_format;
+
+    if (!is_short_header(meta->format) && !is_xbox) header_size += 20; // sizeof(DirectX::DDS_HEADER_DXT10);
+
+    meta->width = selected_bitmap->width__pixels_DO_NOT_CHANGE;
+    meta->height = selected_bitmap->height__pixels_DO_NOT_CHANGE;
+    
+    // to convert our metadata to xbox, we're just going to pretend we're writing the regular DDS header
+    // we encode so it fixes up all of the data, and then we just change stuff that we need to, to convert it to the xbox version
+    if (is_xbox) header_size + sizeof(DDS_HEADER_XBOX_p);
+
+
+    /* leftover for if reading streaming data is ever needed
+    if (bitmap_details->streamingData.count == 0)
+        throw new exception("no streaming data or pixel data");
+
+    uint32_t index = 0; // probably the lowest quality // select the image that we want to be using
+    if (index >= bitmap_details->streamingData.count)
+        throw new exception("out of bounds index for streaming texture array");
+
+    // we do not actually use streamingdata, because it contains virtually nothing useful
+    // the only thing it really tells us anything is MAYBE the chunkinfo
+    // it looks like that just tells us how many blocks of 256 our image contains
+    // so to calculate the dimensions (assuming the image is square), we would use this formula
+    // dimensions = Math.sqrt(chunkinfo) * 256 // idk what that is in c++
+    */
+
+
+
+
 
     // ///////////////////////////////////// //
     // CONVERT BITMAP TO DIRECTXTEX TEXTURE //
@@ -570,6 +577,9 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
         // DXGI_FORMAT_BC1_UNORM_SRGB (72) is actually long header? // TODO??
         throw new exception("header size was incorrectly assumed! must investigate this image format!!!");
 
+
+
+
     std::cout << "copying bitmap data\n";
     // then write the bitmap data
     if (is_using_pixel_data)  // non-resource pixel array
@@ -581,8 +591,56 @@ void BITM_GetTexture(std::string filepath, bool deswizzle) {
     // ////////////////// //
     // UNSWIZZLE TEXTURE //
     // //////////////// //
-    if (deswizzle){
-        std::cout << "Unswizzling DDS\n";
+    if (is_xbox){
+        std::cout << "Processing DDS as xbox DDs\n";
+        static_assert(sizeof(DDS_HEADER_XBOX_p) == 36, "DDS XBOX Header size mismatch");
+
+
+        DDS_HEADER_p* encoded_header = (DDS_HEADER_p*)DDSheader_dest + sizeof(uint32_t);
+        encoded_header->ddspf.flags |= 4; // DDS_FOURCC
+        encoded_header->ddspf.fourCC = 0x584F4258; // 'XBOX' backwards
+
+            
+        // if (!(pHeader->ddspf.flags & DDS_FOURCC)
+        // || (MAKEFOURCC('X', 'B', 'O', 'X') != pHeader->ddspf.fourCC))
+
+        DDS_HEADER_XBOX_p* encoded_xbox_header = (DDS_HEADER_XBOX_p*)DDSheader_dest + sizeof(uint32_t) + 124; // sizeof(DirectX::DDS_HEADER);
+        // luckily, if the original format was the DX10 header, then it encodes the first 5 parameters for this header: dxgiFormat, resourceDimension, miscFlag, arraySize & miscFlags2
+        // thats because we just pretend its a regular DDS header, and are converting it in place (which works because the xbox version is larger than the regular one)
+        encoded_xbox_header->tileMode = Xbox::c_XboxTileModeLinear;
+        encoded_xbox_header->baseAlignment = 2;
+        encoded_xbox_header->dataSize = image_data_size; // not sure about this one
+        encoded_xbox_header->xdkVer = 0;
+
+        // ok, now our image should be good for loading
+        DirectX::TexMetadata* test = nullptr;
+        Xbox::XboxImage* out_image = new Xbox::XboxImage();
+        HRESULT hr = Xbox::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, test, *out_image);
+        if (!SUCCEEDED(hr))
+            throw new exception("failed to load xbox encoded image");
+
+        /* // we need to write the header with whatever data we have
+        
+            uint32_t    tileMode; // see XG_TILE_MODE / XG_SWIZZLE_MODE
+            uint32_t    baseAlignment;
+            uint32_t    dataSize;
+            uint32_t    xdkVer; // matching _XDK_VER / _GXDK_VER
+
+
+
+            if (static_cast<XboxTileMode>(xboxext->tileMode) == c_XboxTileModeInvalid)
+            {
+                return HRESULT_FROM_WIN32(ERROR_INVALID_DATA);
+            }
+            if (!dataSize || !baseAlignment)
+            {
+                return E_FAIL;
+            }
+        
+        */
+
+
+
         UnSwizzle(DDSheader_dest + header_size, image_data_size, 32L); // not sure on the stride yet
     }
 
@@ -645,21 +703,21 @@ int main(){
     bool deswizzle = true;
 
     // the mountain control? image 
-    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k PC\\fo05_desert_macromask_control{pc}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k PC\\fo05_desert_macromask_control{pc}.bitmap", false);
     BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Macromask 4k Xbox\\fo05_desert_macromask_control{x1}.bitmap", deswizzle);
     // the mountain white image 
-    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k PC\\fo05_desert_terrainmacro_color{pc}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k PC\\fo05_desert_terrainmacro_color{pc}.bitmap", false);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Fo05 Desert Terrainmacro Color 4k Xbox\\fo05_desert_terrainmacro_color{x1}.bitmap", deswizzle);
     // forerunner thing // NO VALID PATTERN
-    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner mp coliseum PC\\fr_mp_coliseum_techbits_b_control{pc}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner mp coliseum PC\\fr_mp_coliseum_techbits_b_control{pc}.bitmap", false);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Forerunner Mp Coliseum Xbox\\fr_mp_coliseum_techbits_b_control{x1}.bitmap", deswizzle);
 
     // no pattern found yet
-    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", false);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost Xbox\\ghost_hull_default_color{x1}.bitmap", deswizzle);
 
     // minp_unsc console 1024 x 1024
-    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", deswizzle);
+    //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Ghost PC\\ghost_hull_default_color{pc}.bitmap", false);
     //BITM_GetTexture("C:\\Users\\Joe bingle\\Downloads\\H5 bitm\\Mining unsc console Xbox\\minp_unsc_color{x1}.bitmap", deswizzle);
 
 

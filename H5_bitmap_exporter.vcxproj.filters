@@ -24,6 +24,18 @@
     <ClCompile Include="detiling\DirectXTexXboxDetile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="detiling\DirectXTexXboxDDS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="detiling\DirectXTexXboxImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="detiling\DirectXTexXboxTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="detiling\recovered_structs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bitm.h">
@@ -48,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="detiling\scoped.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="detiling\DDS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

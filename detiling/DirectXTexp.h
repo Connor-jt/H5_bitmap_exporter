@@ -361,17 +361,17 @@ namespace DirectX
         _In_reads_bytes_(inSize) const void* pSource, _In_ size_t inSize,
         _In_ DXGI_FORMAT inFormat, _In_ uint32_t tflags) noexcept;
 
-    _Success_(return != false) bool __cdecl _LoadScanline(
-        _Out_writes_(count) XMVECTOR* pDestination, _In_ size_t count,
-        _In_reads_bytes_(size) const void* pSource, _In_ size_t size, _In_ DXGI_FORMAT format) noexcept;
+    //_Success_(return != false) bool __cdecl _LoadScanline(
+    //    _Out_writes_(count) XMVECTOR* pDestination, _In_ size_t count,
+    //    _In_reads_bytes_(size) const void* pSource, _In_ size_t size, _In_ DXGI_FORMAT format) noexcept;
 
     _Success_(return != false) bool __cdecl _LoadScanlineLinear(
         _Out_writes_(count) XMVECTOR* pDestination, _In_ size_t count,
         _In_reads_bytes_(size) const void* pSource, _In_ size_t size, _In_ DXGI_FORMAT format, _In_ TEX_FILTER_FLAGS flags) noexcept;
 
-    _Success_(return != false) bool __cdecl _StoreScanline(
-        _Out_writes_bytes_(size) void* pDestination, _In_ size_t size, _In_ DXGI_FORMAT format,
-        _In_reads_(count) const XMVECTOR* pSource, _In_ size_t count, _In_ float threshold = 0) noexcept;
+    //_Success_(return != false) bool __cdecl _StoreScanline(
+    //    _Out_writes_bytes_(size) void* pDestination, _In_ size_t size, _In_ DXGI_FORMAT format,
+    //    _In_reads_(count) const XMVECTOR* pSource, _In_ size_t count, _In_ float threshold = 0) noexcept;
 
     _Success_(return != false) bool __cdecl _StoreScanlineLinear(
         _Out_writes_bytes_(size) void* pDestination, _In_ size_t size, _In_ DXGI_FORMAT format,

@@ -131,13 +131,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="detiling\DirectXTexXboxDDS.cpp" />
     <ClCompile Include="detiling\DirectXTexXboxDetile.cpp" />
+    <ClCompile Include="detiling\DirectXTexXboxImage.cpp" />
+    <ClCompile Include="detiling\DirectXTexXboxTile.cpp" />
+    <ClCompile Include="detiling\recovered_structs.cpp" />
     <ClCompile Include="H5_bitmap_exporter.cpp" />
     <ClCompile Include="tagprocessing\TagFramework.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bitm.h" />
     <ClInclude Include="commons.h" />
+    <ClInclude Include="detiling\DDS.h" />
     <ClInclude Include="detiling\DirectXTexp.h" />
     <ClInclude Include="detiling\DirectXTexXbox.h" />
     <ClInclude Include="detiling\recovered_structs.h" />

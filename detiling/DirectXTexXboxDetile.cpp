@@ -271,7 +271,7 @@ namespace
             if ((xbox.GetSize() - mip.OffsetBytes) < mip.SizeBytes)
                 return E_FAIL;
 
-            if (!LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
+            if (!XG_DLL::LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
                 return E_FAIL;
 
             // Perform detiling
@@ -305,7 +305,7 @@ namespace
                     target[x] = tiled[offset];
                 }
 
-                if (!StoreScanline(img->pixels, img->rowPitch, img->format, target, img->width))
+                if (!XG_DLL::StoreScanline(img->pixels, img->rowPitch, img->format, target, img->width))
                     return E_FAIL;
             }
         }
@@ -412,7 +412,7 @@ namespace
             if ((xbox.GetSize() - mip.OffsetBytes) < mip.SizeBytes)
                 return E_FAIL;
 
-            if (!LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
+            if (!XG_DLL::LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
                 return E_FAIL;
 
             // Perform detiling
@@ -449,7 +449,7 @@ namespace
                         target[x] = tiled[offset];
                     }
 
-                    if (!StoreScanline(dptr, img->rowPitch, img->format, target, img->width))
+                    if (!XG_DLL::StoreScanline(dptr, img->rowPitch, img->format, target, img->width))
                         return E_FAIL;
 
                     dptr += img->rowPitch;
@@ -561,7 +561,7 @@ namespace
                     if ((rptr + mip.PitchBytes) > endPtr)
                         return E_FAIL;
 
-                    if (!LoadScanline(uptr, mip.PitchPixels, rptr, mip.PitchBytes, xbox.GetMetadata().format))
+                    if (!XG_DLL::LoadScanline(uptr, mip.PitchPixels, rptr, mip.PitchBytes, xbox.GetMetadata().format))
                         return E_FAIL;
 
                     rptr += mip.PitchBytes;
@@ -599,7 +599,7 @@ namespace
                         target[x] = tiled[offset];
                     }
 
-                    if (!StoreScanline(rptr, result.rowPitch, result.format, target, result.width))
+                    if (!XG_DLL::StoreScanline(rptr, result.rowPitch, result.format, target, result.width))
                         return E_FAIL;
 
                     rptr += result.rowPitch;
@@ -671,7 +671,7 @@ HRESULT Xbox::Detile(
 #endif
 
         ComPtr<XGTextureAddressComputer> computer;
-        HRESULT hr = XGCreateTexture1DComputer(&desc, computer.GetAddressOf());
+        HRESULT hr = XG_DLL::XGCreateTexture1DComputer(&desc, computer.GetAddressOf());
         if (FAILED(hr))
             return hr;
 
@@ -750,7 +750,7 @@ HRESULT Xbox::Detile(
 #endif
 
         ComPtr<XGTextureAddressComputer> computer;
-        HRESULT hr = XGCreateTexture2DComputer(&desc, computer.GetAddressOf());
+        HRESULT hr = XG_DLL::XGCreateTexture2DComputer(&desc, computer.GetAddressOf());
         if (FAILED(hr))
             return hr;
 
@@ -827,7 +827,7 @@ HRESULT Xbox::Detile(
 #endif
 
         ComPtr<XGTextureAddressComputer> computer;
-        HRESULT hr = XGCreateTexture3DComputer(&desc, computer.GetAddressOf());
+        HRESULT hr = XG_DLL::XGCreateTexture3DComputer(&desc, computer.GetAddressOf());
         if (FAILED(hr))
             return hr;
 
