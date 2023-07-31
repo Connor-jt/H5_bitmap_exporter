@@ -536,7 +536,7 @@ void BITM_GetTexture(std::string filepath, bool is_xbox) {
     
     // to convert our metadata to xbox, we're just going to pretend we're writing the regular DDS header
     // we encode so it fixes up all of the data, and then we just change stuff that we need to, to convert it to the xbox version
-    if (is_xbox) header_size + sizeof(DDS_HEADER_XBOX_p);
+    if (is_xbox) header_size += sizeof(DDS_HEADER_XBOX_p);
 
 
     /* leftover for if reading streaming data is ever needed

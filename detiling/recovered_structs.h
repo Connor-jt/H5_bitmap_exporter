@@ -318,47 +318,20 @@ public:
 	unsigned long Release() { return 0L; }
 };
 namespace XG_DLL{
-	bool LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }
-	typedef bool __stdcall externLoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }
-	externLoadScanline* ref_LoadScanline;
+	extern bool LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }
+	extern bool _LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept;
 
-	bool _LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept;
-	typedef bool __stdcall extern_LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept;
-	extern_LoadScanline* ref__LoadScanline;
+	extern bool StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept; // { return true; }
+	extern bool _StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept;
 
-
-	bool StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept; // { return true; }
-	typedef bool __stdcall externStoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold) noexcept; // { return true; }
-	externStoreScanline* ref_StoreScanline;
-
-	bool _StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept;
-	typedef bool __stdcall extern_StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold) noexcept;
-	extern_StoreScanline* ref__StoreScanline;
-
-
-	HRESULT XGCreateTexture1DComputer(XG_TEXTURE1D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
-	typedef HRESULT __stdcall externXGCreateTexture1DComputer(XG_TEXTURE1D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
-	externXGCreateTexture1DComputer* ref_XGCreateTexture1DComputer;
-
-	HRESULT XGCreateTexture2DComputer(XG_TEXTURE2D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
-	typedef HRESULT __stdcall externXGCreateTexture2DComputer(XG_TEXTURE2D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
-	externXGCreateTexture2DComputer* ref_XGCreateTexture2DComputer;
-
-	HRESULT XGCreateTexture3DComputer(XG_TEXTURE3D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
-	typedef HRESULT __stdcall externXGCreateTexture3DComputer(XG_TEXTURE3D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
-	externXGCreateTexture3DComputer* ref_XGCreateTexture3DComputer;
-
-	XG_TILE_MODE XGComputeOptimalTileMode(XG_RESOURCE_DIMENSION dimension, XG_FORMAT format, UINT width, UINT height, UINT depth__, UINT something, XG_BIND_FLAG bind_flag); // { return (XG_TILE_MODE)0; }
-	typedef XG_TILE_MODE __stdcall externXGComputeOptimalTileMode(XG_RESOURCE_DIMENSION dimension, XG_FORMAT format, UINT width, UINT height, UINT depth__, UINT something, XG_BIND_FLAG bind_flag); // { return (XG_TILE_MODE)0; }
-	externXGComputeOptimalTileMode* ref_XGComputeOptimalTileMode;
+	extern HRESULT XGCreateTexture1DComputer(XG_TEXTURE1D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
+	extern HRESULT XGCreateTexture2DComputer(XG_TEXTURE2D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
+	extern HRESULT XGCreateTexture3DComputer(XG_TEXTURE3D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }
+	extern XG_TILE_MODE XGComputeOptimalTileMode(XG_RESOURCE_DIMENSION dimension, XG_FORMAT format, UINT width, UINT height, UINT depth__, UINT something, XG_BIND_FLAG bind_flag); // { return (XG_TILE_MODE)0; }
 
 
 
 	// management stuff
-	HINSTANCE mod;
-
-	bool IsDllLoaded = false;
-	void VerifyDll();
 };
 
 struct DDS_HEADER_XBOX_p{ // Must match structure in XboxDDSTextureLoader module
