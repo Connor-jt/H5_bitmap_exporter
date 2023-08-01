@@ -1,5 +1,6 @@
 
 #include "TagFramework.h"
+#include <iostream>
 
 
 uint64_t TagProcessing::resolve_datablock_offset(data_block* datar, tag_loading_offsets* offsets) {
@@ -11,7 +12,11 @@ uint64_t TagProcessing::resolve_datablock_offset(data_block* datar, tag_loading_
 }
 
 TAG_OBJ_TYPE TagProcessing::Open_ready_tag(char* tag_bytes, uint64_t tag_size, char*& _Out_tag, char*& _Out_cleanup_ptr){
-	TAG_OBJ_TYPE resulting_type = Processtag(tag_bytes, tag_size, _Out_tag, _Out_cleanup_ptr);
+	TAG_OBJ_TYPE resulting_type = NONE;
+	try{resulting_type = Processtag(tag_bytes, tag_size, _Out_tag, _Out_cleanup_ptr);}
+	catch (exception ex){ // we already cleanup the ptr
+		std::cout << "tag file failed to read: " << ex.what();
+	}
 	delete[] tag_bytes; // cleanup the file read request
 	return resulting_type;
 }
@@ -166,12 +171,12 @@ TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char
 	_Out_data = &runtime_bytes[resolve_datablock_offset(root_datar, offsets)];
 	_Out_cleanup_ptr = runtime_bytes; // how is this outputting a number thats 0x28 larger than the previous
 	delete offsets;
-	TAG_OBJ_TYPE resulting_group = NONE;
+
 	switch (target_group) {
 	case  1236057003492058159: return bitmap;		
 	case  4657725475941061082: return runtime_geo;	
 	case 13546876791234752572: return render_model;	
 	case  9265759122008847170: return level;			
 	}
-	return NONE;
+	return UNKNOWN;
 }

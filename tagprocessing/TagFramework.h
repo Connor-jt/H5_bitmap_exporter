@@ -12,7 +12,8 @@ using namespace std;
 // thus returning a nullptr
 
 enum TAG_OBJ_TYPE{
-	NONE,
+	NONE = 0,
+	UNKNOWN = 1,
 	bitmap,
 	render_model,
 	physics_model,

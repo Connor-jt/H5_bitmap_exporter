@@ -309,6 +309,7 @@ typedef struct XG_RESOURCE_LAYOUT {
 	char padding[0x1C]; // 0x1C
 	XG_plane* Plane; // 0x38 // correct
 
+	char size_padding[5920]; // just to make sure this object DOESN'T leak over to the other variables on the stack
 };
 // these i have absolutely no idea on, BUT i only need them to exist, and not have any specific length
 typedef struct XG_PACKED_MIP_DESC {};
@@ -331,6 +332,7 @@ public: // i have no idea if this actually works, worst case scenario: my comput
 	virtual HRESULT CopyFromSubresource(void* param_1, UINT param_2, UINT param_3, void* param_4, UINT param_5, UINT param_6) { return 621; };
 	virtual HRESULT GetResourceTiling(UINT* param_1, XG_PACKED_MIP_DESC* param_2, XG_TILE_SHAPE* param_3, UINT* param_4, UINT param_5, XG_SUBRESOURCE_TILING* param_6) { return 621; };
 	virtual HRESULT GetTextureViewDescriptor(UINT PlaneIndex, XG_DESCRIPTOR_TEXTURE_VIEW* TexView) { return 621; };
+
 };
 namespace XG_DLL{
 	extern bool LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }

@@ -658,7 +658,9 @@ HRESULT Xbox::Detile(
     // memalloc the approximate size
     // its supposedly 5920 bytes long, according to the "CTextureAddressComputer::GetResourceLayout" decompiled code
     // stick with a nice square number though
-    XG_RESOURCE_LAYOUT* layout = (XG_RESOURCE_LAYOUT*)(new char[8192]);
+    // well i hope this works lol, i assume it puts all those bytes on the stack
+    //char bytes_on_stack[8192]{};
+    XG_RESOURCE_LAYOUT layout;
 
     switch (metadata.dimension)
     {
@@ -683,15 +685,15 @@ HRESULT Xbox::Detile(
         if (FAILED(hr))
             return hr;
 
-        hr = computer->GetResourceLayout(layout);
+        hr = computer->GetResourceLayout(&layout);
         if (FAILED(hr))
             return hr;
 
-        if (layout->Planes != 1)
+        if (layout.Planes != 1)
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 
-        if (layout->SizeBytes != xbox.GetSize()
-            || layout->BaseAlignmentBytes != xbox.GetAlignment())
+        if (layout.SizeBytes != xbox.GetSize()
+            || layout.BaseAlignmentBytes != xbox.GetAlignment())
             return E_UNEXPECTED;
 
         hr = image.Initialize(metadata);
@@ -716,7 +718,7 @@ HRESULT Xbox::Detile(
                     images.push_back(img);
                 }
 
-                hr = Detile1D(xbox, level, computer.Get(), *layout, &images[0], images.size());
+                hr = Detile1D(xbox, level, computer.Get(), layout, &images[0], images.size());
             }
             else
             {
@@ -727,7 +729,7 @@ HRESULT Xbox::Detile(
                     return E_FAIL;
                 }
 
-                hr = Detile1D(xbox, level, computer.Get(), *layout, &img, 1);
+                hr = Detile1D(xbox, level, computer.Get(), layout, &img, 1);
             }
 
             if (FAILED(hr))
@@ -762,7 +764,7 @@ HRESULT Xbox::Detile(
         if (FAILED(hr))
             return hr;
 
-        hr = computer->GetResourceLayout(layout);
+        hr = computer->GetResourceLayout(&layout);
         if (FAILED(hr))
             return hr;
         /* ~If you close your eyes~
@@ -796,7 +798,7 @@ HRESULT Xbox::Detile(
                     images.push_back(img);
                 }
 
-                hr = Detile2D(xbox, level, computer.Get(), *layout, &images[0], images.size());
+                hr = Detile2D(xbox, level, computer.Get(), layout, &images[0], images.size());
             }
             else
             {
@@ -807,7 +809,7 @@ HRESULT Xbox::Detile(
                     return E_FAIL;
                 }
 
-                hr = Detile2D(xbox, level, computer.Get(), *layout, &img, 1);
+                hr = Detile2D(xbox, level, computer.Get(), layout, &img, 1);
             }
 
             if (FAILED(hr))
@@ -840,15 +842,15 @@ HRESULT Xbox::Detile(
         if (FAILED(hr))
             return hr;
 
-        hr = computer->GetResourceLayout(layout);
+        hr = computer->GetResourceLayout(&layout);
         if (FAILED(hr))
             return hr;
 
-        if (layout->Planes != 1)
+        if (layout.Planes != 1)
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 
-        if (layout->SizeBytes != xbox.GetSize()
-            || layout->BaseAlignmentBytes != xbox.GetAlignment())
+        if (layout.SizeBytes != xbox.GetSize()
+            || layout.BaseAlignmentBytes != xbox.GetAlignment())
             return E_UNEXPECTED;
 
         hr = image.Initialize(metadata);
@@ -867,7 +869,7 @@ HRESULT Xbox::Detile(
             }
 
             // Relies on the fact that slices are contiguous
-            hr = Detile3D(xbox, level, d, computer.Get(), *layout, image.GetImages()[index]);
+            hr = Detile3D(xbox, level, d, computer.Get(), layout, image.GetImages()[index]);
             if (FAILED(hr))
             {
                 image.Release();
