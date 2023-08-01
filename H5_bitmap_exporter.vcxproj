@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="detiling\DirectXTexConvert.cpp" />
     <ClCompile Include="detiling\DirectXTexXboxDDS.cpp" />
     <ClCompile Include="detiling\DirectXTexXboxDetile.cpp" />
     <ClCompile Include="detiling\DirectXTexXboxImage.cpp" />

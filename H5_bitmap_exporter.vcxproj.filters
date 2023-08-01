@@ -36,6 +36,9 @@
     <ClCompile Include="detiling\recovered_structs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="detiling\DirectXTexConvert.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bitm.h">
