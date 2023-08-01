@@ -320,7 +320,7 @@ UINT BITM_GetTexture(std::string filepath) {
         char* res_tagdata = nullptr;
         char* res_cleanup_ptr = nullptr;
         TagProcessing::Open_ready_tag(mid_resource->content, mid_resource->size, res_tagdata, res_cleanup_ptr);
-        mid_resource->content = 0; // this pointer has been deleted in that function (ALWAYS)
+        mid_resource->content = res_cleanup_ptr; // new pointer for mr cleanup
 
         selected_bitmap->bitmap_resource_handle_.content_ptr = (BitmapDataResource*)res_tagdata;
     }
@@ -514,7 +514,7 @@ UINT BITM_GetTexture(std::string filepath) {
         is_BC = true;
         hr = DirectX::Decompress(DDS_image->GetImages(), DDS_image->GetImageCount(), DDS_image->GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, *decompressedImage);
         if (FAILED(hr))
-            return cleanup(decompress_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, decompressedImage);
+            return cleanup(decompress_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, DDS_image, decompressedImage);
 
     }
     else decompressedImage = DDS_image;
@@ -557,10 +557,10 @@ UINT BITM_GetTexture(std::string filepath) {
     wstring wide_export_path (export_file_path.begin(), export_file_path.end());
     hr = DirectX::SaveToWICFile(*decompressedImage->GetImage(0, 0, 0), DirectX::WIC_FLAGS_NONE, DirectX::GetWICCodec(output_type), wide_export_path.c_str());
     if (FAILED(hr))
-        return cleanup(filesave_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, decompressedImage);
+        return cleanup(filesave_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, DDS_image, decompressedImage);
 
     // cleanup all ptrs
-    return cleanup(success, cleanup_ptr, file_resources, meta, DDSheader_dest, decompressedImage);
+    return cleanup(success, cleanup_ptr, file_resources, meta, DDSheader_dest, DDS_image, decompressedImage);
 }
 
 
