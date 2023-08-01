@@ -194,9 +194,15 @@ std::string our_error_codes[32] = {
     string("failed to save DDS to local file"),
 };
 // bit silly, but it makes the code way cleaner
-UINT cleanup(UINT error, char* cleanup_ptr = nullptr, vector<resource_handle*>* file_resources = nullptr, void* meta = nullptr, char* DDSheader_dest = nullptr, void* DDS_image = nullptr, void* decompressedImage = nullptr) {
-    if (decompressedImage)  delete decompressedImage;
-    if (DDS_image)          delete DDS_image;
+UINT cleanup(UINT error, char* cleanup_ptr = nullptr, vector<resource_handle*>* file_resources = nullptr, void* meta = nullptr, char* DDSheader_dest = nullptr, DirectX::ScratchImage* DDS_image = nullptr, DirectX::ScratchImage* decompressedImage = nullptr) {
+    if (decompressedImage){
+        decompressedImage->Release();
+        delete decompressedImage;
+    }
+    if (DDS_image){
+        DDS_image->Release();
+        delete DDS_image;
+    }
     if (DDSheader_dest)     delete[] DDSheader_dest;
     if (meta)               delete meta;
     if (cleanup_ptr)        delete[] cleanup_ptr;
@@ -466,6 +472,7 @@ UINT BITM_GetTexture(std::string filepath) {
         Xbox::XboxImage* xbox_image = new Xbox::XboxImage();
         HRESULT hr = Xbox::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, nullptr, *xbox_image);
         if (!SUCCEEDED(hr)){
+            xbox_image->Release();
             delete xbox_image;
             return cleanup(load_XboxDDS_fail, cleanup_ptr, file_resources, meta, DDSheader_dest);
         }
@@ -477,10 +484,12 @@ UINT BITM_GetTexture(std::string filepath) {
         DDS_image = new DirectX::ScratchImage();
         hr = Xbox::Detile(*xbox_image, *DDS_image);
         if (!SUCCEEDED(hr)) {
+            xbox_image->Release();
             delete xbox_image;
             return cleanup(detile_XboxDDS_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, DDS_image);
         }
 
+        xbox_image->Release();
         delete xbox_image; // cleanup
     }
     else
