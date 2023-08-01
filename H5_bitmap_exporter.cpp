@@ -377,13 +377,17 @@ UINT BITM_GetTexture(std::string filepath) {
     if (is_xbox){
         std::cout << "[XBOX]\n";
         header_size += sizeof(DDS_HEADER_XBOX_p);
+        // warn user if type is likely unsupported
+        if (!DirectX::IsTypeless(meta->format) && !DirectX::IsCompressed(meta->format) && !DirectX::IsPacked(meta->format))
+            std::cout << "this image type may not be supported\n";
+
     } else {
         std::cout << "[PC]\n";
         if (!is_short_header(meta->format))
             header_size += 20; // sizeof(DirectX::DDS_HEADER_DXT10);
     }
      
-        
+    
         
 
 

@@ -252,7 +252,8 @@ namespace
         }
         else
         {
-            throw new std::exception("scanline function unimplemented");
+            return E_FAIL;
+            //throw new std::exception("scanline function unimplemented");
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -395,8 +396,8 @@ namespace
         }
         else // we dont have functioning "LoadScanline" functions
         {
-
-            throw new std::exception("scanline function unimplemented");
+            return E_FAIL;
+            //throw new std::exception("scanline function unimplemented");
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -532,7 +533,8 @@ namespace
         }
         else
         {
-            throw new std::exception("scanline function unimplemented");
+            return E_FAIL;
+            //throw new std::exception("scanline function unimplemented");
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
