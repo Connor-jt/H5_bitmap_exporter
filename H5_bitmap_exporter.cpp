@@ -148,6 +148,30 @@ int32_t GetFormat(uint16_t tagformat){
     }
 
 }
+bool is_exportable_format(DXGI_FORMAT format) {
+    switch (format){
+        case DXGI_FORMAT_R32G32B32A32_FLOAT:
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:
+        case DXGI_FORMAT_R16G16B16A16_UNORM:
+        case DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM:
+        case DXGI_FORMAT_R10G10B10A2_UNORM:
+        case DXGI_FORMAT_B5G5R5A1_UNORM:
+        case DXGI_FORMAT_B5G6R5_UNORM:
+        case DXGI_FORMAT_R32_FLOAT:
+        case DXGI_FORMAT_R16_FLOAT:
+        case DXGI_FORMAT_R16_UNORM:
+        case DXGI_FORMAT_R8_UNORM:
+        case DXGI_FORMAT_A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        case DXGI_FORMAT_B8G8R8A8_UNORM:
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+        case DXGI_FORMAT_B8G8R8X8_UNORM:
+        case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
+            return true;
+    }
+    return false;
+}
 
 
 
@@ -170,7 +194,7 @@ enum error_reasons {
     no_DDS_fail = 15,
     decompress_fail = 16,
     filesave_fail = 17,
-
+    convert_fail = 18,
 };
 
 std::string our_error_codes[32] = {
@@ -192,6 +216,7 @@ std::string our_error_codes[32] = {
     string("DDS image was not able to be loaded"),
     string("could not decompress BC bitmap"),
     string("failed to save DDS to local file"),
+    string("could not convert image to another format"),
 };
 // bit silly, but it makes the code way cleaner
 UINT cleanup(UINT error, char* cleanup_ptr = nullptr, vector<resource_handle*>* file_resources = nullptr, void* meta = nullptr, char* DDSheader_dest = nullptr, DirectX::ScratchImage* DDS_image = nullptr, DirectX::ScratchImage* decompressedImage = nullptr) {
@@ -333,7 +358,7 @@ UINT BITM_GetTexture(std::string filepath) {
     // instead of doing any of that, lets just pick the largest resource file
     int largest_resource_index = -1;
     for (int i = 0; i < file_resources->size(); i++) {
-        if ((*file_resources)[i]->size > image_data_size) {
+        if ((*file_resources)[i]->is_chunk && (*file_resources)[i]->size > image_data_size) {
             largest_resource_index = i;
             image_data_size = (*file_resources)[i]->size;
     }}
@@ -511,23 +536,27 @@ UINT BITM_GetTexture(std::string filepath) {
     // we need to export via WIC file, so no extra tool is required to actually finish the conversion
 
     // if BC, then we need to decompress the image to convert it
-    DirectX::ScratchImage* decompressedImage = new DirectX::ScratchImage();
-    bool is_BC = false;
+    DirectX::ScratchImage* decompressedImage = nullptr;
     if (DirectX::IsCompressed(meta->format)) {
         std::cout << "decompressing BC format\n";
-        is_BC = true;
+        decompressedImage = new DirectX::ScratchImage();
         hr = DirectX::Decompress(DDS_image->GetImages(), DDS_image->GetImageCount(), DDS_image->GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, *decompressedImage);
         if (FAILED(hr))
             return cleanup(decompress_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, DDS_image, decompressedImage);
-
     }
-    else decompressedImage = DDS_image;
+    else if (!is_exportable_format(meta->format)){ // BC bitmaps should always convert to that format anyway, so they shouldn't need to convert
+        std::cout << "converting image format\n";
+        decompressedImage = new DirectX::ScratchImage();
+        hr = DirectX::Convert(DDS_image->GetImages(), DDS_image->GetImageCount(), DDS_image->GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, *decompressedImage);
+        if (FAILED(hr))
+            return cleanup(convert_fail, cleanup_ptr, file_resources, meta, DDSheader_dest, DDS_image, decompressedImage);
+    } 
+    else {
+        decompressedImage = DDS_image;
+        DDS_image = nullptr; // make sure to null or else the process will crash  because it will release & delete it twice
+    }
 
-    // then convert it
-    //DirectX::ScratchImage WICImage;
-    //hr = DirectX::Convert(decompressedImage->GetImages(), decompressedImage->GetImageCount(), decompressedImage->GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, WICImage);
-    //if (FAILED(hr))
-    //    throw exception("could not convert image to exportable format");
+
 
     //std::cout << "saving DDS file\n";
 
@@ -600,10 +629,24 @@ void FindBitmaps(const std::wstring& directory){
 }
 
 
-std::string version = "0.1.2";
+std::string version = "0.2.0";
 int main(){
     try
     {
+        /*
+        auto test = sizeof(XG_RESOURCE_LAYOUT);
+{ // sizeof = 
+            { // sizeof = 
+        
+        */
+
+        auto test1 = sizeof(XG_mipmap);
+        auto test2 = sizeof(XG_PLANE_LAYOUT);
+        auto test3 = sizeof(XG_RESOURCE_LAYOUT);
+        assert(test1 >= 0x60, "resource layout was the wrong size");
+        assert(test2 >= 0x5C0, "resource layout was the wrong size");
+        assert(test3 >= 5952, "resource layout was the wrong size");
+
         HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think
         if (FAILED(hr)) {
             std::cout << "failed to coInitialize Application (idk what this means), aborting process";

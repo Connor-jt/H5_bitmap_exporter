@@ -170,12 +170,12 @@ typedef enum XG_RESOURCE_MISC_FLAG : UINT {
 	XG_RESOURCE_MISC_SHARED_EXCLUSIVE_WRITER
 };
 // source: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_cpu_access_flag
-typedef enum XG_CPU_ACCESS_FLAG {
+typedef enum XG_CPU_ACCESS_FLAG : UINT {
 	XG_CPU_ACCESS_WRITE = 0x10000L,
 	XG_CPU_ACCESS_READ = 0x20000L
 };
 // source: DirectXTex.h : LINE 134 (it confirms these match elsewhere)
-enum XG_RESOURCE_DIMENSION
+enum XG_RESOURCE_DIMENSION : UINT // i think
 {	// "Subset here matches D3D10_RESOURCE_DIMENSION and D3D11_RESOURCE_DIMENSION"
 	XG_RESOURCE_DIMENSION_TEXTURE1D = 2,
 	XG_RESOURCE_DIMENSION_TEXTURE2D = 3,
@@ -191,6 +191,18 @@ typedef enum XG_USAGE {
 	XG_USAGE_IMMUTABLE = 1,
 	XG_USAGE_DYNAMIC = 2,
 	XG_USAGE_STAGING = 3
+};
+enum XG_PLANE_USAGE : UINT{
+	XG_PLANE_USAGE_UNUSED = 0,
+	XG_PLANE_USAGE_DEFAULT = 1,
+	XG_PLANE_USAGE_COLOR_MASK = 2,
+	XG_PLANE_USAGE_FRAGMENT_MASK = 3,
+	XG_PLANE_USAGE_HTILE = 4,
+	XG_PLANE_USAGE_LUMA = 5,
+	XG_PLANE_USAGE_CHROMA = 6,
+	XG_PLANE_USAGE_DEPTH = 7,
+	XG_PLANE_USAGE_STENCIL = 8,
+	XG_PLANE_USAGE_DELTA_COLOR_COMPRESSION = 9,
 };
 typedef enum XG_TEXTURE_LAYOUT {
 	XG_TEXTURE_LAYOUT_UNKNOWN = 0,
@@ -221,6 +233,8 @@ typedef struct XG_TEXTURE1D_DESC{
 	XG_USAGE Usage;
 	XG_BIND_FLAG BindFlags;
 	XG_RESOURCE_MISC_FLAG MiscFlags;
+	UINT ESRAMOffsetBytes;
+	UINT ESRAMUsageBytes;
 	XG_TILE_MODE TileMode;
 	UINT Pitch;
 };
@@ -261,6 +275,8 @@ typedef struct XG_TEXTURE3D_DESC {
 	XG_BIND_FLAG BindFlags;
 	XG_CPU_ACCESS_FLAG CPUAccessFlags;
 	XG_RESOURCE_MISC_FLAG MiscFlags;
+	UINT ESRAMOffsetBytes;
+	UINT ESRAMUsageBytes;
 	XG_TILE_MODE TileMode;
 	UINT Pitch;
 };
@@ -279,37 +295,48 @@ typedef struct XG_RESOURCE_DESC{
 	// possibly pitch in here too
 };
 
-// NOT REAL STRUCT // USED TO GET THIS TO COMPILE //
-typedef struct XG_mipmap{
-	UINT WidthElements; // == 512
-	UINT HeightElements; // == 512
-	UINT PitchPixels;
-	UINT PaddedDepthOrArraySize; // == 1
-	UINT SizeBytes; // == image size
-	UINT OffsetBytes; // == 0
-	UINT PaddedHeightElements;
-	UINT PaddedWidthElements;
-	UINT PitchBytes;
-	UINT Slice2DSizeBytes;
+typedef struct XG_mipmap{ // sizeof = 0x60
+	UINT64 SizeBytes; // 0x8
+	UINT64 OffsetBytes; // 0x10
+	UINT64 Slice2DSizeBytes; // 0x18
+	UINT32 PitchPixels; // 0x1C
+	UINT32 PitchBytes; // 0x20
+	UINT32 AlignmentBytes; // 0x24
+	UINT32 PaddedWidthElements; // 0x28
+	UINT32 PaddedHeightElements; // 0x2C
+	UINT32 PaddedDepthOrArraySize; // 0x30
+	UINT32 WidthElements; // 0x34
+	UINT32 HeightElements; // 0x38
+	UINT32 DepthOrArraySize; // 0x3C
+	UINT32 SampleCount; // 0x40
+	XG_TILE_MODE TileMode; // 0x44
+	char padding1[4]; // 0x48
+	UINT64 BankRotationAddressBitMask; // 0x50
+	UINT64 BankRotationBytesPerSlice; // 0x58
+	UINT32 SliceDepthElements; // 0x5C
+	char padding2[4]; // 0x60
 };
 // NOT REAL STRUCT // USED TO GET THIS TO COMPILE //
-// sizeof = 1480 bytes (?) theres no way it can be that many	
-typedef struct XG_plane{ // sizeof = 0x172 (370)
-	size_t BytesPerElement; // correct 
-	XG_mipmap MipLayout[10]; // not correct at all?
+struct XG_PLANE_LAYOUT{ // sizeof = 5C8
+	XG_PLANE_USAGE Usage; // 0x4
+	char padding1[4]; // 0x8
+	UINT64 SizeBytes; // 0x10
+	UINT64 BaseOffsetBytes; // 0x18
+	UINT64 BaseAlignmentBytes; // 0x20
+	UINT32 BytesPerElement; // 0x24
+	char padding2[4]; // 0x28
+	XG_mipmap MipLayout[15]; // sizeof = 5A0
 };
 
-// size should be 5920 bytes (?) sourced from the decompiled 'GetResourceLayout' function
-typedef struct XG_RESOURCE_LAYOUT {
-	UINT64 SizeBytes; // 0x0 // correct
-	UINT64 BaseAlignmentBytes; // 0x8 // correct
-	UINT Planes; // 0x10 // probably correct
-	UINT Dimension; // 0x14 // not correct?
-	UINT MipLevels; // 0x18 // not correct?
-	char padding[0x1C]; // 0x1C
-	XG_plane Plane[1]; // 0x38 // correct
-
-	char size_padding[5920]; // just to make sure this object DOESN'T leak over to the other variables on the stack
+// size should be 5952 bytes (?) sourced from the decompiled 'GetResourceLayout' function
+struct XG_RESOURCE_LAYOUT {
+	UINT64 SizeBytes; // 0x8
+	UINT64 BaseAlignmentBytes; // 0x10
+	UINT32 MipLevels; // 0x14
+	UINT32 Planes; // 0x18
+	XG_PLANE_LAYOUT Plane[4]; // 0x1738 // sizeof = 0x1720
+	XG_RESOURCE_DIMENSION Dimension; // 0x173C
+	char padding[4];
 };
 // these i have absolutely no idea on, BUT i only need them to exist, and not have any specific length
 typedef struct XG_PACKED_MIP_DESC {};

@@ -38,7 +38,8 @@ void VerifyDll() {
     if (!mod){
         LPVOID lpMsgBuf;
         DWORD dw = GetLastError();
-        throw std::exception("[DLL ERROR] : xg.dll failed to load, process cannot continue");
+        std::string result = "[DLL ERROR] : xg.dll failed to load, process cannot continue, code: " + dw;
+        throw std::exception(result.c_str());
     }
     ref_XGCreateTexture1DComputer = (externXGCreateTexture1DComputer*)GetProcAddress(mod, "XGCreateTexture1DComputer");
     if (!ref_XGCreateTexture1DComputer) throw std::exception("[DLL ERROR] : function 'XGCreateTexture1DComputer' could not be loaded, non-critical but process will not continue");

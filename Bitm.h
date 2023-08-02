@@ -153,7 +153,7 @@ struct bitm {
         bool tight_bounds_from_alpha_channel_unchecked__tight_bounds_are_generated_from_the_color_channel() { return (content & 0b00000000000000000000010000000000); }
         bool do_not_generate_required_section_bitmap_will_have_data_split_between_medium_and_low_optional_sections() { return (content & 0b00000000000000000000100000000000); }
         bool unused() { return (content & 0b00000000000000000001000000000000); }
-        bool apply_max_resolution_after_slicing_allows_use_of__quot_max_resolution_quot__on_bitmaps_that_have_multiple_frames__but_may_be_buggy____() { return (content & 0b00000000000000000010000000000000); }
+        bool apply_max_resolution_after_slicing_allows_use_of__quot_max_resolution_quot__on_bitmaps_that_have_multiple_frames__but_may_be_buggy____() { return (content & 0b00000000000000000010000000000000); }                                                                                                                                                        
         bool generate_black_point_tight_bounds_generate_a_set_of_polygonal_bounding_boxes_for_various_alpha_black_points() { return (content & 0b00000000000000000100000000000000); }
         bool Pre_filter_cubemaps_Apply_cosine_power_weighted_cone_filter_to_entire_cubemap_instead_of_filtering_each_face_as_separate_2D_image() { return (content & 0b00000000000000001000000000000000); }
     };

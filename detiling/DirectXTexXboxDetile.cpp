@@ -210,7 +210,7 @@ namespace
         if (!xbox.GetPointer() || !computer || !result || !result[0])
             return E_POINTER;
 
-        //assert(layout.Planes == 1);
+        assert(layout.Planes == 1);
 
         const DXGI_FORMAT format = result[0]->format;
 
@@ -231,7 +231,7 @@ namespace
             // XG (XboxOne) incorrectly returns 2 instead of 4 here for layout.Plane[0].BytesPerElement
 
             const size_t w = result[0]->width;
-            //assert(((w + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(((w + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
 
             return DetileByElement1D(xbox, level, computer, layout, result, nimages, bpp, w, true);
         }
@@ -239,16 +239,15 @@ namespace
         {
             //--- Typeless is done with per-element copy ----------------------------------
             const size_t bpp = (BitsPerPixel(format) + 7) / 8;
-            //assert(bpp == layout.Plane[0].BytesPerElement);
+            assert(bpp == layout.Plane[0].BytesPerElement);
 
             const size_t w = result[0]->width;
-            //assert(w == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(w == layout.Plane[0].MipLayout[level].WidthElements);
 
             return DetileByElement1D(xbox, level, computer, layout, result, nimages, bpp, w, false);
         }
         else
         {
-            return E_FAIL;
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -330,7 +329,7 @@ namespace
 
         assert(xbox.GetMetadata().format == result[0]->format);
 
-        //assert(layout.Planes == 1);
+        assert(layout.Planes == 1);
 
         const DXGI_FORMAT format = result[0]->format;
 
@@ -355,9 +354,9 @@ namespace
                 || format == DXGI_FORMAT_BC4_UNORM
                 || format == DXGI_FORMAT_BC4_SNORM) ? 8 : 16;
 
-            //assert(nbw == layout.Plane[0].MipLayout[level].WidthElements);
-            //assert(nbh == layout.Plane[0].MipLayout[level].HeightElements);
-            //assert(bpb == layout.Plane[0].BytesPerElement);
+            assert(nbw == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(nbh == layout.Plane[0].MipLayout[level].HeightElements);
+            assert(bpb == layout.Plane[0].BytesPerElement);
 
             return DetileByElement2D(xbox, level, computer, layout, result, nimages, bpb, nbw, nbh, false);
         }
@@ -369,8 +368,8 @@ namespace
 
             const size_t w = result[0]->width;
             const size_t h = result[0]->height;
-            //assert(((w + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
-            //assert(h == layout.Plane[0].MipLayout[level].HeightElements);
+            assert(((w + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(h == layout.Plane[0].MipLayout[level].HeightElements);
 
             return DetileByElement2D(xbox, level, computer, layout, result, nimages, bpp, w, h, true);
         }
@@ -378,19 +377,18 @@ namespace
         {
             //--- Typeless is done with per-element copy ----------------------------------
             const size_t bpp = (BitsPerPixel(format) + 7) / 8;
-            //assert(bpp == layout.Plane[0].BytesPerElement);
+            assert(bpp == layout.Plane[0].BytesPerElement);
 
             const size_t w = result[0]->width;
             const size_t h = result[0]->height;
 
-            //assert(w == layout.Plane[0].MipLayout[level].WidthElements);
-            //assert(h == layout.Plane[0].MipLayout[level].HeightElements);
+            assert(w == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(h == layout.Plane[0].MipLayout[level].HeightElements);
 
             return DetileByElement2D(xbox, level, computer, layout, result, nimages, bpp, w, h, false);
         }
         else
         {
-            return E_FAIL;
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -475,7 +473,7 @@ namespace
 
         assert(xbox.GetMetadata().format == result.format);
 
-        //assert(layout.Planes == 1);
+        assert(layout.Planes == 1);
 
 #if defined(_GAMING_XBOX_SCARLETT) || defined(_USE_SCARLETT)
         const bool byelement = true;
@@ -496,9 +494,9 @@ namespace
                 || result.format == DXGI_FORMAT_BC4_UNORM
                 || result.format == DXGI_FORMAT_BC4_SNORM) ? 8 : 16;
 
-            //assert(nbw == layout.Plane[0].MipLayout[level].WidthElements);
-            //assert(nbh == layout.Plane[0].MipLayout[level].HeightElements);
-            //assert(bpb == layout.Plane[0].BytesPerElement);
+            assert(nbw == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(nbh == layout.Plane[0].MipLayout[level].HeightElements);
+            assert(bpb == layout.Plane[0].BytesPerElement);
 
             return DetileByElement3D(xbox, level, slices, computer, layout, result, bpb, nbw, nbh, false);
         }
@@ -508,8 +506,8 @@ namespace
 
             // XG (XboxOne) incorrectly returns 2 instead of 4 here for layout.Plane[0].BytesPerElement
 
-            //assert(((result.width + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
-            //assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
+            assert(((result.width + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
 
             return DetileByElement3D(xbox, level, slices, computer, layout, result, bpp, result.width, result.height, true);
         }
@@ -519,14 +517,13 @@ namespace
             const size_t bpp = (BitsPerPixel(result.format) + 7) / 8;
             assert(bpp == layout.Plane[0].BytesPerElement);
 
-            //assert(result.width == layout.Plane[0].MipLayout[level].WidthElements);
-            //assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
+            assert(result.width == layout.Plane[0].MipLayout[level].WidthElements);
+            assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
 
             return DetileByElement3D(xbox, level, slices, computer, layout, result, bpp, result.width, result.height, false);
         }
         else
         {
-            return E_FAIL;
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -681,9 +678,9 @@ HRESULT Xbox::Detile(
         if (layout.Planes != 1)
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 
-        if (layout.SizeBytes != xbox.GetSize()
-            || layout.BaseAlignmentBytes != xbox.GetAlignment())
-            return E_UNEXPECTED;
+        //if (layout.SizeBytes != xbox.GetSize()
+        //    || layout.BaseAlignmentBytes != xbox.GetAlignment())
+        //    return E_UNEXPECTED;
 
         hr = image.Initialize(metadata);
         if (FAILED(hr))
@@ -757,10 +754,10 @@ HRESULT Xbox::Detile(
         if (FAILED(hr))
             return hr;
 
-        //throw std::exception("debug here");
-        //if (layout.Planes != 1)
-        //    return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-        //
+        if (layout.Planes != 1)
+            return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+        
+        // i have no idea what "BaseAlignmentBytes" means? whats being aligned, and why to such a high number?
         //if (layout.SizeBytes != xbox.GetSize()
         //    || layout.BaseAlignmentBytes != xbox.GetAlignment())
         //    return E_UNEXPECTED;
@@ -838,9 +835,9 @@ HRESULT Xbox::Detile(
         if (layout.Planes != 1)
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 
-        if (layout.SizeBytes != xbox.GetSize()
-            || layout.BaseAlignmentBytes != xbox.GetAlignment())
-            return E_UNEXPECTED;
+        //if (layout.SizeBytes != xbox.GetSize()
+        //   || layout.BaseAlignmentBytes != xbox.GetAlignment())
+        //    return E_UNEXPECTED;
 
         hr = image.Initialize(metadata);
         if (FAILED(hr))
