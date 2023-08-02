@@ -599,6 +599,7 @@ void FindBitmaps(const std::wstring& directory){
     }
 }
 
+
 std::string version = "0.1.2";
 int main(){
     try
