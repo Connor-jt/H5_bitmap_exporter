@@ -28,7 +28,7 @@ TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char
 	tag_header* header = (tag_header*)tag_bytes;
 	current_byte_offset += tag_header_size;
 	if (header->Magic != 1752392565) { // 'hscu'
-		throw new exception("Incorrect 'Magic'! potential wrong file type!");
+		throw exception("Incorrect 'Magic'! potential wrong file type!");
 	}
 
 	tag_loading_offsets* offsets = new tag_loading_offsets;
@@ -77,7 +77,7 @@ TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char
 	if (offsets->data_3_offset + current_byte_offset != file_size) {
 		delete[] runtime_bytes;
 		delete offsets;
-		throw new exception("unaccounted bytes detected in tag file! potential read failure! potential bad struct mappings!");
+		throw exception("unaccounted bytes detected in tag file! potential read failure! potential bad struct mappings!");
 	}
 
 	// first we should figure out the tag type, which we can do by looking through the tag structs 
@@ -97,7 +97,7 @@ TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char
 	if (target_group == 0){
 		delete[] runtime_bytes;
 		delete offsets;
-		throw new exception("No valid root struct!!!");
+		throw exception("No valid root struct!!!");
 	}
 
 	// lets do runtime fixups on the file now
@@ -120,7 +120,7 @@ TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char
 			_basic_resource* resource = reinterpret_cast<_basic_resource*>(&runtime_bytes[resolve_datablock_offset(datar, offsets) + current_struct->FieldOffset]);
 			// use the handle as an index to the resource
 			if (resource->runtime_resource_handle != 0 && resource->runtime_resource_handle != 0xBCBCBCBC) // verify that we didn't mess up the mappings
-				throw new exception("tag has data on runtime_resource_handle! there should be no data here! investigate!!");
+				throw exception("tag has data on runtime_resource_handle! there should be no data here! investigate!!");
 			resource->runtime_resource_handle = current_resource_index;
 
 			if (resource->is_chunked_resource == 0) { // currently nothing is to be done here
@@ -141,7 +141,7 @@ TAG_OBJ_TYPE TagProcessing::Processtag(char* tag_bytes, uint64_t file_size, char
 			}
 			current_resource_index++;
 		}else{ // unknown
-			throw new exception("unknown type thing!!");
+			throw exception("unknown type thing!!");
 	}}
 	// fixup data references
 	for (uint32_t c = 0; c < header->DataReferenceCount; c++){

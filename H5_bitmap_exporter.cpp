@@ -98,14 +98,14 @@ int32_t GetFormat(uint16_t tagformat){
     case  0x2: return 61;
     case  0x3: return 49;
   //case  0x4:
-  //case  0x5: throw new exception("unsupported image format");
+  //case  0x5: throw exception("unsupported image format");
     case  0x6: return 85;
-  //case  0x7: throw new exception("unsupported image format");
+  //case  0x7: throw exception("unsupported image format");
     case  0x8: return 86;
     case  0x9: return 115;
     case  0xA: return 88;
     case  0xB: return 87;
-  //case  0xC: throw new exception("unsupported image format");
+  //case  0xC: throw exception("unsupported image format");
     case  0xE: return 71;
     case  0xF: return 74;
     case 0x10: return 77;
@@ -113,9 +113,9 @@ int32_t GetFormat(uint16_t tagformat){
   //case 0x12:
   //case 0x13:
   //case 0x14:
-  //case 0x15: throw new exception("unsupported image format");
+  //case 0x15: throw exception("unsupported image format");
     case 0x16: return 51;
-  //case 0x17: throw new exception("unsupported image format");
+  //case 0x17: throw exception("unsupported image format");
     case 0x18: return 2;
     case 0x19: return 10;
     case 0x1A: 
@@ -127,14 +127,14 @@ int32_t GetFormat(uint16_t tagformat){
     case 0x20: return 56;
     case 0x21: return 35;
     case 0x22: return 13;
-  //case 0x23: throw new exception("unsupported image format");
+  //case 0x23: throw exception("unsupported image format");
     case 0x24: return 80;
     case 0x25: return 81;
-  //case 0x26: throw new exception("unsupported image format");
+  //case 0x26: throw exception("unsupported image format");
     case 0x27: return 84;
     case 0x28: return 107; // "This is a guess, tag defs claim this format is deprecated, yet it is still used. gg"
   //case 0x29: 
-  //case 0x2A: throw new exception("unsupported image format");
+  //case 0x2A: throw exception("unsupported image format");
     case 0x2B:
     case 0x2C: return 80;
     case 0x2D: return 83;
@@ -393,11 +393,11 @@ UINT BITM_GetTexture(std::string filepath) {
 
     /* leftover for if reading streaming data is ever needed
     if (bitmap_details->streamingData.count == 0)
-        throw new exception("no streaming data or pixel data");
+        throw exception("no streaming data or pixel data");
 
     uint32_t index = 0; // probably the lowest quality // select the image that we want to be using
     if (index >= bitmap_details->streamingData.count)
-        throw new exception("out of bounds index for streaming texture array");
+        throw exception("out of bounds index for streaming texture array");
 
     // we do not actually use streamingdata, because it contains virtually nothing useful
     // the only thing it really tells us anything is MAYBE the chunkinfo
@@ -445,7 +445,7 @@ UINT BITM_GetTexture(std::string filepath) {
     // UNSWIZZLE TEXTURE //
     // //////////////// //
     if (is_xbox){
-        std::cout << "Processing DDS as xbox DDs\n";
+        std::cout << "Processing DDS as xbox DDS\n";
         //static_assert(sizeof(DDS_HEADER_XBOX_p) == 36, "DDS XBOX Header size mismatch");
 
 
@@ -467,7 +467,7 @@ UINT BITM_GetTexture(std::string filepath) {
         }
 
         encoded_xbox_header->tileMode = bitmap_details->tileMode; // bitmap_details->tileMode; // Xbox::c_XboxTileModeLinear;
-        encoded_xbox_header->baseAlignment = 1; // can be anything other than 0??
+        encoded_xbox_header->baseAlignment = 32768; // this is the value that the Xbox layout is saying it should be?? // can be anything other than 0??
         encoded_xbox_header->dataSize = image_data_size;
         encoded_xbox_header->xdkVer = 0;
 
@@ -527,14 +527,14 @@ UINT BITM_GetTexture(std::string filepath) {
     //DirectX::ScratchImage WICImage;
     //hr = DirectX::Convert(decompressedImage->GetImages(), decompressedImage->GetImageCount(), decompressedImage->GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, WICImage);
     //if (FAILED(hr))
-    //    throw new exception("could not convert image to exportable format");
+    //    throw exception("could not convert image to exportable format");
 
     //std::cout << "saving DDS file\n";
 
     //const wchar_t* dds_export_file_path = L"C:\\Users\\Joe bingle\\Downloads\\H5 images\\test.dds";
     //hr = DirectX::SaveToDDSFile(*decompressedImage->GetImage(0, 0, 0), (DirectX::DDS_FLAGS)0, dds_export_file_path);
     //if (FAILED(hr))
-    //    throw new exception("failed to save DDS to local file");
+    //    throw exception("failed to save DDS to local file");
 
 
     std::cout << "saving WIC file\n";
@@ -599,84 +599,103 @@ void FindBitmaps(const std::wstring& directory){
     }
 }
 
+std::string version = "0.1.2";
 int main(){
-    HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think
-    if (FAILED(hr))
-        throw new exception("Failed to coInitialize");
-
-    std::cout << "enter the directory containing bitmaps (dont put a \\ at the end)\n";
-
-    //string directory;
-    //std::cin >> directory;
-
-    std::string directory;
-    std::getline(std::cin, directory);
-    std::cout << "finding bitmaps...\n";
-
-    // fallback so the findbitmaps function doesn't break when i hit enter twice or something
-    struct stat s;
-    int err = stat(directory.c_str(), &s);
-    if (-1 == err) {
-        std::cout << "failed to find directory, process aborted\n";
-        system("pause");
-        return 0;
-    }
-
-    wstring wide_directory(directory.begin(), directory.end());
-    FindBitmaps(wide_directory);
-    std::cout << bitmap_files.size() << " bitmaps found\n\n";
-    if (bitmap_files.size() == 0){
-        std::cout << "it looks like you didn't find any bitmaps, did you input the path correctly? process aborted\n";
-        system("pause");
-        return 0;
-    }
-
-
-    std::cout << "enter the output file format (by entering the corresponding index)\n";
-    std::cout << "[0]: jpeg\n";
-    std::cout << "[1]: png\n";
-    std::cout << "[2]: tiff\n";
-    std::cout << "[3]: gif\n\n";
-
-    int file_format;
-    std::cin >> file_format;
-
-    switch (file_format)
+    try
     {
-    case 0:
-        output_type = DirectX::WIC_CODEC_JPEG;
-        std::cout << "\n[jpeg]\n\n";
-        break;
-    case 1:
-        output_type = DirectX::WIC_CODEC_PNG;
-        std::cout << "\n[png]\n\n";
-        break;
-    case 2:
-        output_type = DirectX::WIC_CODEC_TIFF;
-        std::cout << "\n[tiff]\n\n";
-        break;
-    case 3:
-        output_type = DirectX::WIC_CODEC_GIF;
-        std::cout << "\n[gif]\n\n";
-        break;
-    default:
-        std::cout << "Invalid index provided, process aborted\n";
+        HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think
+        if (FAILED(hr)) {
+            std::cout << "failed to coInitialize Application (idk what this means), aborting process";
+            system("pause");
+            return 0;
+        }
+        std::cout << "bitm exporter Version: " << version << "\n";
+        std::cout << "enter the directory containing bitmaps (dont put a \\ at the end)\nAll sub directories will also be searched (recursive search)\n";
+
+        //string directory;
+        //std::cin >> directory;
+
+        std::string directory;
+        std::getline(std::cin, directory);
+        std::cout << "finding bitmaps...\n";
+
+        // fallback so the findbitmaps function doesn't break when i hit enter twice or something
+        struct stat s;
+        int err = stat(directory.c_str(), &s);
+        if (-1 == err) {
+            std::cout << "failed to find directory, process aborted\n";
+            system("pause");
+            return 0;
+        }
+
+        wstring wide_directory(directory.begin(), directory.end());
+        FindBitmaps(wide_directory);
+        std::cout << bitmap_files.size() << " bitmaps found\n\n";
+        if (bitmap_files.size() == 0) {
+            std::cout << "it looks like you didn't find any bitmaps, did you input the path correctly? process aborted\n";
+            system("pause");
+            return 0;
+        }
+
+
+        std::cout << "enter the output file format (by entering the corresponding index)\n";
+        std::cout << "[0]: jpeg\n";
+        std::cout << "[1]: png\n";
+        std::cout << "[2]: tiff\n";
+        std::cout << "[3]: gif\n\n";
+
+        int file_format;
+        std::cin >> file_format;
+
+        switch (file_format)
+        {
+        case 0:
+            output_type = DirectX::WIC_CODEC_JPEG;
+            std::cout << "\n[jpeg]\n\n";
+            break;
+        case 1:
+            output_type = DirectX::WIC_CODEC_PNG;
+            std::cout << "\n[png]\n\n";
+            break;
+        case 2:
+            output_type = DirectX::WIC_CODEC_TIFF;
+            std::cout << "\n[tiff]\n\n";
+            break;
+        case 3:
+            output_type = DirectX::WIC_CODEC_GIF;
+            std::cout << "\n[gif]\n\n";
+            break;
+        default:
+            std::cout << "Invalid index provided, process aborted\n";
+            system("pause");
+            return 0;
+        }
+
+        std::cout << "WARNING decompressed files may expand up to (and possibly greater than) 8 times their original size (this may be important if you are decompressing the entire h5 build) \n";
+        //std::cout << "continue?";
+        system("pause");
+        std::cout << "\n\n";
+
+        for (int i = 0; i < bitmap_files.size(); i++) {
+            string filename = bitmap_files[i];
+            std::cout << "exporting [" << i << "]: " << filename << "\n";
+            try {
+                UINT error_code = BITM_GetTexture(filename);
+                std::cout << our_error_codes[error_code] << "\n\n";
+            }
+            catch (exception ex) {
+                std::cout << "\nprocess ran into an error, continuing is not advised\n\n";
+                std::cout << ex.what() << "\n\n";
+                system("pause");
+            }
+        }
+        std::cout << "exporting completed!\n";
+        system("pause");
+        return 0;
+
+    }catch (exception ex){
+        std::cout << "complete process failure\n";
         system("pause");
         return 0;
     }
-
-    std::cout << "WARNING decompressed files may expand up to (and possibly greater than) 8 times their original size (this may be important if you are decompressing the entire h5 build) \n";
-    //std::cout << "continue?";
-    system("pause");
-    std::cout << "\n\n";
-
-    for (int i = 0; i < bitmap_files.size(); i++){
-        string filename = bitmap_files[i];
-        std::cout << "exporting [" << i << "]: " << filename << "\n";
-        UINT error_code = BITM_GetTexture(filename);
-        std::cout << our_error_codes[error_code] << "\n\n";
-    }
-    std::cout << "exporting completed!\n";
-    system("pause");
-    return 0;
 }

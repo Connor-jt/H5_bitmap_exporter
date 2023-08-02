@@ -281,12 +281,12 @@ typedef struct XG_RESOURCE_DESC{
 
 // NOT REAL STRUCT // USED TO GET THIS TO COMPILE //
 typedef struct XG_mipmap{
-	UINT WidthElements;
-	UINT HeightElements;
+	UINT WidthElements; // == 512
+	UINT HeightElements; // == 512
 	UINT PitchPixels;
-	UINT PaddedDepthOrArraySize;
-	UINT SizeBytes;
-	UINT OffsetBytes;
+	UINT PaddedDepthOrArraySize; // == 1
+	UINT SizeBytes; // == image size
+	UINT OffsetBytes; // == 0
 	UINT PaddedHeightElements;
 	UINT PaddedWidthElements;
 	UINT PitchBytes;
@@ -294,20 +294,20 @@ typedef struct XG_mipmap{
 };
 // NOT REAL STRUCT // USED TO GET THIS TO COMPILE //
 // sizeof = 1480 bytes (?) theres no way it can be that many	
-typedef struct XG_plane{
+typedef struct XG_plane{ // sizeof = 0x172 (370)
 	size_t BytesPerElement; // correct 
-	XG_mipmap* MipLayout; // not correct at all?
+	XG_mipmap MipLayout[10]; // not correct at all?
 };
 
 // size should be 5920 bytes (?) sourced from the decompiled 'GetResourceLayout' function
 typedef struct XG_RESOURCE_LAYOUT {
 	UINT64 SizeBytes; // 0x0 // correct
 	UINT64 BaseAlignmentBytes; // 0x8 // correct
-	UINT Planes; // 0x10 // maybe correct
+	UINT Planes; // 0x10 // probably correct
 	UINT Dimension; // 0x14 // not correct?
 	UINT MipLevels; // 0x18 // not correct?
 	char padding[0x1C]; // 0x1C
-	XG_plane* Plane; // 0x38 // correct
+	XG_plane Plane[1]; // 0x38 // correct
 
 	char size_padding[5920]; // just to make sure this object DOESN'T leak over to the other variables on the stack
 };
@@ -335,10 +335,10 @@ public: // i have no idea if this actually works, worst case scenario: my comput
 
 };
 namespace XG_DLL{
-	extern bool LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }
+	//extern bool LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept; // { return true; }
 	//extern bool _LoadScanline(DirectX::XMVECTOR* pDestination, size_t count, const void* pSource, size_t size, DXGI_FORMAT format) noexcept;
 
-	extern bool StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept; // { return true; }
+	//extern bool StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept; // { return true; }
 	//extern bool _StoreScanline(void* pDestination, size_t size, DXGI_FORMAT format, const DirectX::XMVECTOR* pSource, size_t count, float threshold = 0) noexcept;
 
 	extern HRESULT XGCreateTexture1DComputer(XG_TEXTURE1D_DESC* texdata, XGTextureAddressComputer** computer); // { return S_OK; }

@@ -10,20 +10,16 @@
 #include "DirectXTexP.h"
 #include "DirectXTexXbox.h"
 
-
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::Internal;
 using namespace Xbox;
 
-
-
-
 namespace
 {
     //----------------------------------------------------------------------------------
     inline HRESULT DetileByElement1D(
-        const Xbox::XboxImage& xbox,
+        const XboxImage& xbox,
         uint32_t level,
         _In_ XGTextureAddressComputer* computer,
         const XG_RESOURCE_LAYOUT& layout,
@@ -214,7 +210,7 @@ namespace
         if (!xbox.GetPointer() || !computer || !result || !result[0])
             return E_POINTER;
 
-        assert(layout.Planes == 1);
+        //assert(layout.Planes == 1);
 
         const DXGI_FORMAT format = result[0]->format;
 
@@ -235,7 +231,7 @@ namespace
             // XG (XboxOne) incorrectly returns 2 instead of 4 here for layout.Plane[0].BytesPerElement
 
             const size_t w = result[0]->width;
-            assert(((w + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
+            //assert(((w + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
 
             return DetileByElement1D(xbox, level, computer, layout, result, nimages, bpp, w, true);
         }
@@ -243,17 +239,16 @@ namespace
         {
             //--- Typeless is done with per-element copy ----------------------------------
             const size_t bpp = (BitsPerPixel(format) + 7) / 8;
-            assert(bpp == layout.Plane[0].BytesPerElement);
+            //assert(bpp == layout.Plane[0].BytesPerElement);
 
             const size_t w = result[0]->width;
-            assert(w == layout.Plane[0].MipLayout[level].WidthElements);
+            //assert(w == layout.Plane[0].MipLayout[level].WidthElements);
 
             return DetileByElement1D(xbox, level, computer, layout, result, nimages, bpp, w, false);
         }
         else
         {
             return E_FAIL;
-            //throw new std::exception("scanline function unimplemented");
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -273,7 +268,7 @@ namespace
             if ((xbox.GetSize() - mip.OffsetBytes) < mip.SizeBytes)
                 return E_FAIL;
 
-            if (!XG_DLL::LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
+            if (!LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
                 return E_FAIL;
 
             // Perform detiling
@@ -307,7 +302,7 @@ namespace
                     target[x] = tiled[offset];
                 }
 
-                if (!XG_DLL::StoreScanline(img->pixels, img->rowPitch, img->format, target, img->width))
+                if (!StoreScanline(img->pixels, img->rowPitch, img->format, target, img->width))
                     return E_FAIL;
             }
         }
@@ -335,12 +330,11 @@ namespace
 
         assert(xbox.GetMetadata().format == result[0]->format);
 
-        // gee what a shame that we dont know the struct
         //assert(layout.Planes == 1);
 
         const DXGI_FORMAT format = result[0]->format;
 
-        //assert(format == xbox.GetMetadata().format);
+        assert(format == xbox.GetMetadata().format);
 
         bool byelement = IsTypeless(format);
 #if defined(_GAMING_XBOX_SCARLETT) || defined(_USE_SCARLETT)
@@ -394,10 +388,9 @@ namespace
 
             return DetileByElement2D(xbox, level, computer, layout, result, nimages, bpp, w, h, false);
         }
-        else // we dont have functioning "LoadScanline" functions
+        else
         {
             return E_FAIL;
-            //throw new std::exception("scanline function unimplemented");
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -417,7 +410,7 @@ namespace
             if ((xbox.GetSize() - mip.OffsetBytes) < mip.SizeBytes)
                 return E_FAIL;
 
-            if (!XG_DLL::LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
+            if (!LoadScanline(tiled, tiledPixels, xbox.GetPointer() + mip.OffsetBytes, mip.SizeBytes, xbox.GetMetadata().format))
                 return E_FAIL;
 
             // Perform detiling
@@ -454,7 +447,7 @@ namespace
                         target[x] = tiled[offset];
                     }
 
-                    if (!XG_DLL::StoreScanline(dptr, img->rowPitch, img->format, target, img->width))
+                    if (!StoreScanline(dptr, img->rowPitch, img->format, target, img->width))
                         return E_FAIL;
 
                     dptr += img->rowPitch;
@@ -482,7 +475,7 @@ namespace
 
         assert(xbox.GetMetadata().format == result.format);
 
-        assert(layout.Planes == 1);
+        //assert(layout.Planes == 1);
 
 #if defined(_GAMING_XBOX_SCARLETT) || defined(_USE_SCARLETT)
         const bool byelement = true;
@@ -503,9 +496,9 @@ namespace
                 || result.format == DXGI_FORMAT_BC4_UNORM
                 || result.format == DXGI_FORMAT_BC4_SNORM) ? 8 : 16;
 
-            assert(nbw == layout.Plane[0].MipLayout[level].WidthElements);
-            assert(nbh == layout.Plane[0].MipLayout[level].HeightElements);
-            assert(bpb == layout.Plane[0].BytesPerElement);
+            //assert(nbw == layout.Plane[0].MipLayout[level].WidthElements);
+            //assert(nbh == layout.Plane[0].MipLayout[level].HeightElements);
+            //assert(bpb == layout.Plane[0].BytesPerElement);
 
             return DetileByElement3D(xbox, level, slices, computer, layout, result, bpb, nbw, nbh, false);
         }
@@ -515,8 +508,8 @@ namespace
 
             // XG (XboxOne) incorrectly returns 2 instead of 4 here for layout.Plane[0].BytesPerElement
 
-            assert(((result.width + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
-            assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
+            //assert(((result.width + 1) / 2) == layout.Plane[0].MipLayout[level].WidthElements);
+            //assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
 
             return DetileByElement3D(xbox, level, slices, computer, layout, result, bpp, result.width, result.height, true);
         }
@@ -526,15 +519,14 @@ namespace
             const size_t bpp = (BitsPerPixel(result.format) + 7) / 8;
             assert(bpp == layout.Plane[0].BytesPerElement);
 
-            assert(result.width == layout.Plane[0].MipLayout[level].WidthElements);
-            assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
+            //assert(result.width == layout.Plane[0].MipLayout[level].WidthElements);
+            //assert(result.height == layout.Plane[0].MipLayout[level].HeightElements);
 
             return DetileByElement3D(xbox, level, slices, computer, layout, result, bpp, result.width, result.height, false);
         }
         else
         {
             return E_FAIL;
-            //throw new std::exception("scanline function unimplemented");
             //--- Standard format handling ------------------------------------------------
             auto& mip = layout.Plane[0].MipLayout[level];
 
@@ -568,7 +560,7 @@ namespace
                     if ((rptr + mip.PitchBytes) > endPtr)
                         return E_FAIL;
 
-                    if (!XG_DLL::LoadScanline(uptr, mip.PitchPixels, rptr, mip.PitchBytes, xbox.GetMetadata().format))
+                    if (!LoadScanline(uptr, mip.PitchPixels, rptr, mip.PitchBytes, xbox.GetMetadata().format))
                         return E_FAIL;
 
                     rptr += mip.PitchBytes;
@@ -606,7 +598,7 @@ namespace
                         target[x] = tiled[offset];
                     }
 
-                    if (!XG_DLL::StoreScanline(rptr, result.rowPitch, result.format, target, result.width))
+                    if (!StoreScanline(rptr, result.rowPitch, result.format, target, result.width))
                         return E_FAIL;
 
                     rptr += result.rowPitch;
@@ -657,12 +649,7 @@ HRESULT Xbox::Detile(
         break;
     }
 
-    // memalloc the approximate size
-    // its supposedly 5920 bytes long, according to the "CTextureAddressComputer::GetResourceLayout" decompiled code
-    // stick with a nice square number though
-    // well i hope this works lol, i assume it puts all those bytes on the stack
-    //char bytes_on_stack[8192]{};
-    XG_RESOURCE_LAYOUT layout;
+    XG_RESOURCE_LAYOUT layout = {};
 
     switch (metadata.dimension)
     {
@@ -769,14 +756,14 @@ HRESULT Xbox::Detile(
         hr = computer->GetResourceLayout(&layout);
         if (FAILED(hr))
             return hr;
-        /* ~If you close your eyes~
-        if (layout->Planes != 1)
-            return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-        
-        if (layout->SizeBytes != xbox.GetSize()
-            || layout->BaseAlignmentBytes != xbox.GetAlignment())
-            return E_UNEXPECTED;
-        */
+
+        //throw std::exception("debug here");
+        //if (layout.Planes != 1)
+        //    return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+        //
+        //if (layout.SizeBytes != xbox.GetSize()
+        //    || layout.BaseAlignmentBytes != xbox.GetAlignment())
+        //    return E_UNEXPECTED;
 
         hr = image.Initialize(metadata);
         if (FAILED(hr))
