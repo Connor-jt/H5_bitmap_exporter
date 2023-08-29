@@ -629,8 +629,8 @@ void FindBitmaps(const std::wstring& directory){
 }
 
 
-std::string version = "0.2.0";
-int main(){
+std::string version = "0.2.1";
+int main(int argc, char* argv[]){
     try
     {
         /*
@@ -654,71 +654,104 @@ int main(){
             return 0;
         }
         std::cout << "bitm exporter Version: " << version << "\n";
-        std::cout << "enter the directory containing bitmaps (dont put a \\ at the end)\nAll sub directories will also be searched (recursive search)\n";
 
-        //string directory;
-        //std::cin >> directory;
+        // ////////////////////////////// //
+        // MANUAL CONFIGURATIONS CONSOLE //
+        // //////////////////////////// //
 
-        std::string directory;
-        std::getline(std::cin, directory);
-        std::cout << "finding bitmaps...\n";
+        if (argc <= 1) {
+            std::cout << "enter the directory containing bitmaps (dont put a \\ at the end)\nAll sub directories will also be searched (recursive search)\n";
 
-        // fallback so the findbitmaps function doesn't break when i hit enter twice or something
-        struct stat s;
-        int err = stat(directory.c_str(), &s);
-        if (-1 == err) {
-            std::cout << "failed to find directory, process aborted\n";
+            //string directory;
+            //std::cin >> directory;
+
+            std::string directory;
+            std::getline(std::cin, directory);
+            std::cout << "finding bitmaps...\n";
+
+            // fallback so the findbitmaps function doesn't break when i hit enter twice or something
+            struct stat s;
+            int err = stat(directory.c_str(), &s);
+            if (-1 == err) {
+                std::cout << "failed to find directory, process aborted\n";
+                system("pause");
+                return 0;
+            }
+
+            wstring wide_directory(directory.begin(), directory.end());
+            FindBitmaps(wide_directory);
+            std::cout << bitmap_files.size() << " bitmaps found\n\n";
+            if (bitmap_files.size() == 0) {
+                std::cout << "it looks like you didn't find any bitmaps, did you input the path correctly? process aborted\n";
+                system("pause");
+                return 0;
+            }
+
+
+            std::cout << "enter the output file format (by entering the corresponding index)\n";
+            std::cout << "[0]: jpeg\n";
+            std::cout << "[1]: png\n";
+            std::cout << "[2]: tiff\n";
+            std::cout << "[3]: gif\n\n";
+
+            int file_format;
+            std::cin >> file_format;
+
+            switch (file_format)
+            {
+            case 0:
+                output_type = DirectX::WIC_CODEC_JPEG;
+                std::cout << "\n[jpeg]\n\n";
+                break;
+            case 1:
+                output_type = DirectX::WIC_CODEC_PNG;
+                std::cout << "\n[png]\n\n";
+                break;
+            case 2:
+                output_type = DirectX::WIC_CODEC_TIFF;
+                std::cout << "\n[tiff]\n\n";
+                break;
+            case 3:
+                output_type = DirectX::WIC_CODEC_GIF;
+                std::cout << "\n[gif]\n\n";
+                break;
+            default:
+                std::cout << "Invalid index provided, process aborted\n";
+                system("pause");
+                return 0;
+            }
+
+            std::cout << "WARNING decompressed files may expand up to (and possibly greater than) 8 times their original size (this may be important if you are decompressing the entire h5 build) \n";
+            //std::cout << "continue?";
             system("pause");
-            return 0;
+            std::cout << "\n\n";
+        }
+        else {
+            string path = string(argv[1]);
+            bitmap_files.push_back(path);
+            
+            if (argc == 2) { // we didn't specify which format
+                output_type = DirectX::WIC_CODEC_PNG;
+                std::cout << "\n[png]\n\n";
+            } else{ // then we also specified the file format
+                string type = string(argv[2]);
+                
+                if (type == "jpeg")output_type = DirectX::WIC_CODEC_JPEG;
+                else if (type == "png") output_type = DirectX::WIC_CODEC_PNG;
+                else if (type == "tiff") output_type = DirectX::WIC_CODEC_TIFF;
+                else if (type == "tiff") output_type = DirectX::WIC_CODEC_GIF;
+                else {
+                    std::cout << "Invalid image format provided, process aborted\n";
+                    system("pause");
+                    return 0;
+                }
+                std::cout << "\n[" + type + "]\n\n";
+                
+            }
         }
 
-        wstring wide_directory(directory.begin(), directory.end());
-        FindBitmaps(wide_directory);
-        std::cout << bitmap_files.size() << " bitmaps found\n\n";
-        if (bitmap_files.size() == 0) {
-            std::cout << "it looks like you didn't find any bitmaps, did you input the path correctly? process aborted\n";
-            system("pause");
-            return 0;
-        }
 
 
-        std::cout << "enter the output file format (by entering the corresponding index)\n";
-        std::cout << "[0]: jpeg\n";
-        std::cout << "[1]: png\n";
-        std::cout << "[2]: tiff\n";
-        std::cout << "[3]: gif\n\n";
-
-        int file_format;
-        std::cin >> file_format;
-
-        switch (file_format)
-        {
-        case 0:
-            output_type = DirectX::WIC_CODEC_JPEG;
-            std::cout << "\n[jpeg]\n\n";
-            break;
-        case 1:
-            output_type = DirectX::WIC_CODEC_PNG;
-            std::cout << "\n[png]\n\n";
-            break;
-        case 2:
-            output_type = DirectX::WIC_CODEC_TIFF;
-            std::cout << "\n[tiff]\n\n";
-            break;
-        case 3:
-            output_type = DirectX::WIC_CODEC_GIF;
-            std::cout << "\n[gif]\n\n";
-            break;
-        default:
-            std::cout << "Invalid index provided, process aborted\n";
-            system("pause");
-            return 0;
-        }
-
-        std::cout << "WARNING decompressed files may expand up to (and possibly greater than) 8 times their original size (this may be important if you are decompressing the entire h5 build) \n";
-        //std::cout << "continue?";
-        system("pause");
-        std::cout << "\n\n";
 
         for (int i = 0; i < bitmap_files.size(); i++) {
             string filename = bitmap_files[i];
@@ -733,8 +766,9 @@ int main(){
                 system("pause");
             }
         }
+        
         std::cout << "exporting completed!\n";
-        system("pause");
+        if (argc <= 1) system("pause"); // dont pause if this was called by a script or something
         return 0;
 
     }catch (exception ex){
