@@ -391,29 +391,29 @@ void BITM_Process(std::string filepath, char* tagdata, vector<resource_handle*> 
 
 
     // process if array type
-    if (selected_bitmap->type__DO_NOT_CHANGE == bitm::__bitmaps_::__type__DO_NOT_CHANGE::array) {
-        cout << "extracting as array type\n";
-        for (int i = 0; i < file_resources.size(); i++) {
-            if (file_resources[i]->is_chunk) {
-                char* DDSheader_dest = nullptr;
-                try{BITM_Export(filepath + std::to_string(i+1), tagdata, file_resources, DDSheader_dest, file_resources[i]->size, file_resources[i]->content);
-                }catch (exception ex) {
-                    if (DDSheader_dest) delete[] DDSheader_dest;
-                    throw ex;}
-                delete[] DDSheader_dest;
-        }}
-        // also get anything from the pixel buffer
-        if (bitmap_details->pixels.data_size > 0){
-            char* DDSheader_dest = nullptr;
-            try{BITM_Export(filepath + "0", tagdata, file_resources, DDSheader_dest, bitmap_details->pixels.data_size, bitmap_details->pixels.content_ptr);
-            }catch (exception ex) {
-                if (DDSheader_dest) delete[] DDSheader_dest;
-                throw ex;}
-            delete[] DDSheader_dest;
-        }
+    //if (selected_bitmap->type__DO_NOT_CHANGE == bitm::__bitmaps_::__type__DO_NOT_CHANGE::array) {
+    //    cout << "extracting as array type\n";
+    //    for (int i = 0; i < file_resources.size(); i++) {
+    //        if (file_resources[i]->is_chunk) {
+    //            char* DDSheader_dest = nullptr;
+    //            try{BITM_Export(filepath + std::to_string(i+1), tagdata, file_resources, DDSheader_dest, file_resources[i]->size, file_resources[i]->content);
+    //            }catch (exception ex) {
+    //                if (DDSheader_dest) delete[] DDSheader_dest;
+    //                throw ex;}
+    //            delete[] DDSheader_dest;
+    //    }}
+    //    // also get anything from the pixel buffer
+    //    if (bitmap_details->pixels.data_size > 0){
+    //        char* DDSheader_dest = nullptr;
+    //        try{BITM_Export(filepath + "0", tagdata, file_resources, DDSheader_dest, bitmap_details->pixels.data_size, bitmap_details->pixels.content_ptr);
+    //        }catch (exception ex) {
+    //            if (DDSheader_dest) delete[] DDSheader_dest;
+    //            throw ex;}
+    //        delete[] DDSheader_dest;
+    //    }
 
-        return;
-    }
+    //    return;
+    //}
 
 
 
