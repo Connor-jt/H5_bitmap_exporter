@@ -186,9 +186,9 @@ void cleanup_resources(vector<resource_handle*>& file_resources) {
 void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<resource_handle*>& file_resources) {
     // READ BITMAP FILE & PROCESS
     ifstream file_stream(filepath, ios::binary | ios::ate);
-    if (!file_stream.is_open()) throw "failed to open bitmap tag";
+    if (!file_stream.is_open()) throw exception("failed to open bitmap tag");
     std::streamsize file_size = file_stream.tellg();
-    if (file_size < tag_header_size) throw "bitmap is too small to contain tag data";
+    if (file_size < tag_header_size) throw exception("bitmap is too small to contain tag data");
     // read the whole file
     char* tag_bytes = new char[file_size]; // this gets cleaned up in open_ready_tag;
     file_stream.seekg(0, ios::beg);
@@ -197,14 +197,14 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
     // process file into runtime tag
     TAG_OBJ_TYPE tag_type = TagProcessing::Open_ready_tag(tag_bytes, file_size, tagdata, cleanup_ptr);
     if (tag_type != TAG_OBJ_TYPE::bitmap)
-        if (tag_type == TAG_OBJ_TYPE::NONE) throw "not a bitmap file";
-        else throw "valid tag file, not a bitmap tag";
+        if (tag_type == TAG_OBJ_TYPE::NONE) throw exception("not a bitmap file");
+        else throw exception("valid tag file, not a bitmap tag");
     // READ ALL RESOURCES
     // we now need to look for resource files, if its a chunk, add it to the out array
     // if its a tag struct file, add it to the inputs
     // convert path into parent directory
     const size_t last_slash_idx = filepath.rfind('\\');
-    if (std::string::npos == last_slash_idx) throw "failed to calculate file directory (theres virtually no way this happens)";
+    if (std::string::npos == last_slash_idx) throw exception("failed to calculate file directory (theres virtually no way this happens)");
     string filefolder = filepath.substr(0, last_slash_idx);
     for (const auto& entry : std::filesystem::directory_iterator(filefolder)) {
         string current_file = entry.path().string();
@@ -225,53 +225,13 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
     }}
 }
 
-UINT BITM_GetTexture(std::string filepath, char* tagdata, vector<resource_handle*>& file_resources, char*& DDSheader_dest) {
-    // BUILD IMAGE HEADER AND VERIFY COMPATIBILITY
-    // TODO: we need to output ALL of these, as they are probably different images
+void BITM_Export(std::string filepath, char* tagdata, vector<resource_handle*> file_resources, char*& DDSheader_dest, size_t image_data_size, char* image_data) {
 
     bitm* bitm_tag = (bitm*)(tagdata);
     bitm::__bitmaps_* selected_bitmap = bitm_tag->bitmaps_[0];
-
-    if (selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::_2D_texture)
-        throw "this tool does not currently support texture formats other than 2D images";
-
-    if (selected_bitmap->bitmap_resource_handle_.content_ptr == 0 || selected_bitmap->bitmap_resource_handle_.content_ptr == (BitmapDataResource*)0xbcbcbcbcbcbcbcbc){
-        // then we need to fetch this resource
-        resource_handle* mid_resource = nullptr;
-        for (int i = 0; i < file_resources.size(); i++){
-            if (file_resources[i]->is_chunk == false) {
-                mid_resource = file_resources[i];
-                break;
-        }}
-        if (mid_resource == nullptr) throw "no bitmap resource header resource-file found";
-
-        char* res_tagdata = nullptr;
-        char* res_cleanup_ptr = nullptr;
-        TagProcessing::Open_ready_tag(mid_resource->content, mid_resource->size, res_tagdata, res_cleanup_ptr);
-        if (res_tagdata == nullptr || res_cleanup_ptr == nullptr) throw "failed to open tag resource file";
-        mid_resource->content = res_cleanup_ptr; // pointer for mr cleanup
-        selected_bitmap->bitmap_resource_handle_.content_ptr = (BitmapDataResource*)res_tagdata;
-    }
     BitmapDataResource* bitmap_details = selected_bitmap->bitmap_resource_handle_.content_ptr;
+    
 
-
-    size_t image_data_size = 0;
-    // instead of doing any of that, lets just pick the largest resource file
-    int largest_resource_index = -1;
-    for (int i = 0; i < file_resources.size(); i++) {
-        if (file_resources[i]->is_chunk && file_resources[i]->size > image_data_size) {
-            largest_resource_index = i;
-            image_data_size = file_resources[i]->size;
-    }}
-
-
-    bool is_using_pixel_data = false;
-    if (largest_resource_index == -1) { // resort to internal pixel buffer (the lowest resolution by the looks of it)
-        is_using_pixel_data = true;
-        image_data_size = bitmap_details->pixels.data_size;
-    }
-
-    if (image_data_size == 0) throw "no pixels to export from this image, possible read logic failure";
 
     size_t header_size = sizeof(uint32_t) + 124; // sizeof(DirectX::DDS_HEADER);
     
@@ -286,7 +246,7 @@ UINT BITM_GetTexture(std::string filepath, char* tagdata, vector<resource_handle
 
     // test format
     uint32_t bitm_format = GetFormat(selected_bitmap->format__DO_NOT_CHANGE);
-    if (bitm_format == -1) throw "DXGI format specified by the tag was either unsupported or invalid";
+    if (bitm_format == -1) throw exception("DXGI format specified by the tag was either unsupported or invalid");
     meta.format = (DXGI_FORMAT)bitm_format;
 
 
@@ -315,15 +275,14 @@ UINT BITM_GetTexture(std::string filepath, char* tagdata, vector<resource_handle
     DDSheader_dest = new char[header_size + image_data_size];
     size_t output_size = 0;
     HRESULT hr = EncodeDDSHeader(meta, DirectX::DDS_FLAGS_NONE, (void*)DDSheader_dest, header_size, output_size);
-    if (!SUCCEEDED(hr)) throw "image failed to generate DDS header";
+    if (!SUCCEEDED(hr)) throw exception("image failed to generate DDS header");
     if (!is_xbox && header_size != output_size) // if its xbox, then we're going to get an output size smaller than our header everytime
         // DXGI_FORMAT_BC1_UNORM_SRGB (72) is actually long header? // TODO??
-        throw "header size was incorrectly assumed! must investigate this image format!!!";
+        throw exception("header size was incorrectly assumed! must investigate this image format!!!");
 
     std::cout << "copying bitmap data\n";
     // then write the bitmap data into our dds 
-    if (is_using_pixel_data) memcpy(DDSheader_dest + header_size, bitmap_details->pixels.content_ptr, image_data_size); // non-resource pixel array
-    else memcpy(DDSheader_dest + header_size, file_resources[largest_resource_index]->content, image_data_size); // chunked resource 
+    memcpy(DDSheader_dest + header_size, image_data, image_data_size);
 
     DirectX::ScratchImage DDS_image = {};
     // ////////////////// //
@@ -355,15 +314,15 @@ UINT BITM_GetTexture(std::string filepath, char* tagdata, vector<resource_handle
         // ok, now our image should be good for loading
         Xbox::XboxImage xbox_image = {};
         HRESULT hr = Xbox::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, nullptr, xbox_image);
-        if (!SUCCEEDED(hr)) throw "failed to load xbox encoded image";
+        if (!SUCCEEDED(hr)) throw exception("failed to load xbox encoded image");
 
         hr = Xbox::Detile(xbox_image, DDS_image);
-        if (!SUCCEEDED(hr)) throw "failed to detile xbox image";
+        if (!SUCCEEDED(hr)) throw exception("failed to detile xbox image");
     }else{
         std::cout << "loading bitmap as DDS\n";
         // and then we should have a fully loaded dds image in mem, which we should beable to now export for testing purposes
         hr = DirectX::LoadFromDDSMemory(DDSheader_dest, header_size + image_data_size, (DirectX::DDS_FLAGS)0, nullptr, DDS_image);
-        if (FAILED(hr)) throw "failed to load DDS from memory";
+        if (FAILED(hr)) throw exception("failed to load DDS from memory");
     }
 
     // we need to export via WIC file, so no extra tool is required to actually finish the conversion
@@ -374,12 +333,12 @@ UINT BITM_GetTexture(std::string filepath, char* tagdata, vector<resource_handle
     if (DirectX::IsCompressed(meta.format)) {
         std::cout << "decompressing BC format\n";
         hr = DirectX::Decompress(DDS_image.GetImages(), DDS_image.GetImageCount(), DDS_image.GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, decompressedImage);
-        if (FAILED(hr)) throw "could not decompress BC bitmap";
+        if (FAILED(hr)) throw exception("could not decompress BC bitmap");
         final_img = decompressedImage.GetImage(0, 0, 0);
     }else if (!is_exportable_format(meta.format)){ // BC bitmaps should always convert to that format anyway, so they shouldn't need to convert
         std::cout << "converting image format\n";
         hr = DirectX::Convert(DDS_image.GetImages(), DDS_image.GetImageCount(), DDS_image.GetMetadata(), DXGI_FORMAT_R8G8B8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, decompressedImage);
-        if (FAILED(hr)) throw "failed to save DDS to local file";
+        if (FAILED(hr)) throw exception("failed to save DDS to local file");
         final_img = decompressedImage.GetImage(0, 0, 0);
     }else final_img = DDS_image.GetImage(0, 0, 0);
 
@@ -394,27 +353,111 @@ UINT BITM_GetTexture(std::string filepath, char* tagdata, vector<resource_handle
 
     wstring wide_export_path (export_file_path.begin(), export_file_path.end());
     hr = DirectX::SaveToWICFile(*final_img, DirectX::WIC_FLAGS_NONE, DirectX::GetWICCodec(output_type), wide_export_path.c_str());
-    if (FAILED(hr)) throw "could not convert image to another format";
+    if (FAILED(hr)) throw exception("could not convert image to another format");
 }
+
+void BITM_Process(std::string filepath, char* tagdata, vector<resource_handle*> file_resources) {
+    // BUILD IMAGE HEADER AND VERIFY COMPATIBILITY
+    // TODO: we need to output ALL of these, as they are probably different images
+
+    bitm* bitm_tag = (bitm*)(tagdata);
+    bitm::__bitmaps_* selected_bitmap = bitm_tag->bitmaps_[0];
+
+    if (bitm_tag->bitmaps_.count > 1)
+        cout << "bitmap contains extra bitmaps that we aren't going to export!!";
+
+    if (selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::_2D_texture && selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::array)
+        throw exception("this tool does not currently support texture formats other than 2D images & array types");
+
+    if (selected_bitmap->bitmap_resource_handle_.content_ptr == 0 || selected_bitmap->bitmap_resource_handle_.content_ptr == (BitmapDataResource*)0xbcbcbcbcbcbcbcbc) {
+        // then we need to fetch this resource
+        resource_handle* mid_resource = nullptr;
+        for (int i = 0; i < file_resources.size(); i++) {
+            if (file_resources[i]->is_chunk == false) {
+                mid_resource = file_resources[i];
+                break;
+            }
+        }
+        if (mid_resource == nullptr) throw exception("no bitmap resource header resource-file found");
+
+        char* res_tagdata = nullptr;
+        char* res_cleanup_ptr = nullptr;
+        TagProcessing::Open_ready_tag(mid_resource->content, mid_resource->size, res_tagdata, res_cleanup_ptr);
+        if (res_tagdata == nullptr || res_cleanup_ptr == nullptr) throw exception("failed to open tag resource file");
+        mid_resource->content = res_cleanup_ptr; // pointer for mr cleanup
+        selected_bitmap->bitmap_resource_handle_.content_ptr = (BitmapDataResource*)res_tagdata;
+    }
+    BitmapDataResource* bitmap_details = selected_bitmap->bitmap_resource_handle_.content_ptr;
+
+
+    // process if array type
+    if (selected_bitmap->type__DO_NOT_CHANGE == bitm::__bitmaps_::__type__DO_NOT_CHANGE::array) {
+        cout << "extracting as array type\n";
+        for (int i = 0; i < file_resources.size(); i++) {
+            if (file_resources[i]->is_chunk) {
+                char* DDSheader_dest = nullptr;
+                try{BITM_Export(filepath + std::to_string(i+1), tagdata, file_resources, DDSheader_dest, file_resources[i]->size, file_resources[i]->content);
+                }catch (exception ex) {
+                    if (DDSheader_dest) delete[] DDSheader_dest;
+                    throw ex;}
+                delete[] DDSheader_dest;
+        }}
+        // also get anything from the pixel buffer
+        if (bitmap_details->pixels.data_size > 0){
+            char* DDSheader_dest = nullptr;
+            try{BITM_Export(filepath + "0", tagdata, file_resources, DDSheader_dest, bitmap_details->pixels.data_size, bitmap_details->pixels.content_ptr);
+            }catch (exception ex) {
+                if (DDSheader_dest) delete[] DDSheader_dest;
+                throw ex;}
+            delete[] DDSheader_dest;
+        }
+
+        return;
+    }
+
+
+
+    char* DDSheader_dest = nullptr;
+    size_t image_data_size = 0;
+    char* image_data_ptr = nullptr;
+    // instead of doing any of that, lets just pick the largest resource file
+    int largest_resource_index = -1;
+    for (int i = 0; i < file_resources.size(); i++) {
+        if (file_resources[i]->is_chunk && file_resources[i]->size > image_data_size) {
+            largest_resource_index = i;
+            image_data_size = file_resources[i]->size;
+            image_data_ptr = file_resources[i]->content;
+    }}
+    if (largest_resource_index == -1) { // resort to internal pixel buffer (the lowest resolution by the looks of it)
+        image_data_size = bitmap_details->pixels.data_size;
+        image_data_ptr = bitmap_details->pixels.content_ptr;
+    }
+
+    if (image_data_size == 0 || image_data_ptr == nullptr) throw exception("no pixels to export from this image, possible read logic failure");
+    
+    try{BITM_Export(filepath, tagdata, file_resources, DDSheader_dest, image_data_size, image_data_ptr);
+    }catch (exception ex) {
+        if (DDSheader_dest) delete[] DDSheader_dest;
+        throw ex;}
+    delete[] DDSheader_dest;
+}
+
 
 void ProcessTagfile(std::string filepath) {
     // load the tag file
     char* tagdata = nullptr;
     char* cleanup_ptr = nullptr; 
-    char* other_cleanup_ptr = nullptr;
     vector<resource_handle*> file_resources = {};
-    bool had_exception = false;
-    exception result = exception("none");
     try{
         OpenTag(filepath, tagdata, cleanup_ptr, file_resources);
-        BITM_GetTexture(filepath, tagdata, file_resources, other_cleanup_ptr);}
-    catch (exception ex) {result = ex; had_exception = true;}
+        BITM_Process(filepath, tagdata, file_resources);}
+    catch (exception ex) {
+        if (cleanup_ptr) delete[] cleanup_ptr;
+        cleanup_resources(file_resources);
+        throw ex;}
     // cleanup junk
     if (cleanup_ptr) delete[] cleanup_ptr;
-    if (other_cleanup_ptr) delete[] other_cleanup_ptr;
     cleanup_resources(file_resources);
-
-    if (had_exception) throw result; // rethrow error if we got one, this seems like a terrible idea but it does cleanup the code
 }
 
 std::vector<std::string> bitmap_files;
@@ -525,13 +568,7 @@ int main(int argc, char* argv[]){
                 system("pause");
                 return 0;
             }
-
-            std::cout << "WARNING decompressed files may expand up to (and possibly greater than) 8 times their original size (this may be important if you are decompressing the entire h5 build) \n";
-            //std::cout << "continue?";
-            system("pause");
-            std::cout << "\n\n";
-        }
-        else {
+        }else {
             string path = string(argv[1]);
             bitmap_files.push_back(path);
             
@@ -562,7 +599,7 @@ int main(int argc, char* argv[]){
             string filename = bitmap_files[i];
             std::cout << "\nexporting [" << i << "]: " << filename << "\n";
             try{ProcessTagfile(filename);
-            }catch (exception ex) {std::cout << ex.what() << "\n\n";}
+            }catch (exception ex) {std::cout << "error extracting: " << ex.what() << "\n\n"; }
         }
         
         std::cout << "exporting completed!\n";
@@ -575,3 +612,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
 }
+
+// this one indicates that we need to figure out how to get different sizes per image slot
+// // wait do arrays even need us to fetch all the images?????
+// C:\Users\Joe bingle\Downloads\misc\pelican_booster_core{x1}.bitmap
