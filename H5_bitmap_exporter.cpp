@@ -24,6 +24,7 @@
 
 #include "detiling/DirectXTexXbox.h"
 
+#include <set>
 
 struct Tag{
     char* data_ptr;
@@ -183,6 +184,20 @@ void cleanup_resources(vector<resource_handle*>& file_resources) {
         delete file_resources[i];
 }}
 
+int read_number_from_string(string source, string search_string) {
+    int offset = source.find(search_string);
+    if (offset == -1) throw exception("failed to find resource index from resource filename");
+    offset += search_string.length();
+
+    // iterate through all following characters to see if they're digits or not
+    int number_length = 0;
+    while (true) {
+        if (!std::isdigit(source[offset + number_length])) break;
+        number_length++;}
+    if (number_length == 0) throw exception("couldn't read index from resource filename");
+    // substring and convert to int
+    return std::stoi(source.substr(offset, number_length));
+}
 void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<resource_handle*>& file_resources) {
     // READ BITMAP FILE & PROCESS
     ifstream file_stream(filepath, ios::binary | ios::ate);
@@ -206,8 +221,13 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
     const size_t last_slash_idx = filepath.rfind('\\');
     if (std::string::npos == last_slash_idx) throw exception("failed to calculate file directory (theres virtually no way this happens)");
     string filefolder = filepath.substr(0, last_slash_idx);
-    for (const auto& entry : std::filesystem::directory_iterator(filefolder)) {
-        string current_file = entry.path().string();
+
+    int non_chunks = 0;
+    int chunks = 0;
+    // then created properly sorted set
+    vector<resource_handle*> unsorted_files = {};
+    for (const auto& file : std::filesystem::directory_iterator(filefolder)) {
+        string current_file = file.path().string();
         if (current_file.length() > filepath.length() && filepath == current_file.substr(0, filepath.length()) && current_file[filepath.length()] == '[') {
             ifstream resource_stream(current_file, ios::binary | ios::ate);
             if (!resource_stream.is_open()) continue;
@@ -220,15 +240,30 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
             resource_stream.close(); // might as well, seeing as we're reading everything right now, needs to be changed in an optimization pass
 
             bool ischunked = (current_file.substr(0, current_file.length()).find(".chunk") != std::string::npos);
+            non_chunks += !ischunked;
+            chunks += ischunked;
             resource_handle* new_resource = new resource_handle(resource_size, resource_bytes, ischunked, current_file);
-            file_resources.push_back(new_resource);
+            unsorted_files.push_back(new_resource);
     }}
+
+    // pad array with nullptrs
+    for (int i = 0; i < unsorted_files.size(); i++) file_resources.push_back(nullptr);
+
+    // then sort the things
+    if (chunks > 0) { // then theres a single resource handle with multiple chunks
+        if (non_chunks != 1) throw exception("bitmap with chunks can only have 1 intermediate resource file");
+        for (auto resource : unsorted_files) {
+            // non chunk goes first
+            if (!resource->is_chunk) file_resources[0] = resource;
+            // then chunks are inserted by their index+1
+            else file_resources[read_number_from_string(resource->filename, ".chunk") +1] = resource;
+    }} 
+    // else sort just non-chunk resources
+    else for (auto resource : unsorted_files) file_resources[read_number_from_string(resource->filename, ".bitmap[")] = resource;
 }
 
-void BITM_Export(std::string filepath, char* tagdata, vector<resource_handle*> file_resources, char*& DDSheader_dest, size_t image_data_size, char* image_data) {
+void BITM_Export(std::string filepath, char*& DDSheader_dest, bitm* bitm_tag, bitm::__bitmaps_* selected_bitmap, size_t image_data_size, char* image_data) {
 
-    bitm* bitm_tag = (bitm*)(tagdata);
-    bitm::__bitmaps_* selected_bitmap = bitm_tag->bitmaps_[0];
     BitmapDataResource* bitmap_details = selected_bitmap->bitmap_resource_handle_.content_ptr;
     
 
@@ -358,88 +393,62 @@ void BITM_Export(std::string filepath, char* tagdata, vector<resource_handle*> f
 
 void BITM_Process(std::string filepath, char* tagdata, vector<resource_handle*> file_resources) {
     // BUILD IMAGE HEADER AND VERIFY COMPATIBILITY
-    // TODO: we need to output ALL of these, as they are probably different images
-
     bitm* bitm_tag = (bitm*)(tagdata);
-    bitm::__bitmaps_* selected_bitmap = bitm_tag->bitmaps_[0];
+    int highest_used_resource = -1;
+    for (int bitmap_index = 0; bitmap_index < bitm_tag->bitmaps_.count; bitmap_index++) {
+        if (bitm_tag->bitmaps_.count > 1) cout << "\nprocessing image " << bitmap_index+1 << "/" << bitm_tag->bitmaps_.count << "\n";
+        bitm::__bitmaps_* selected_bitmap = bitm_tag->bitmaps_[bitmap_index];
 
-    if (bitm_tag->bitmaps_.count > 1)
-        cout << "bitmap contains extra bitmaps that we aren't going to export!!";
+        if (selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::_2D_texture && selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::array)
+            throw exception("this tool does not currently support texture formats other than 2D images & array types");
 
-    if (selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::_2D_texture && selected_bitmap->type__DO_NOT_CHANGE != bitm::__bitmaps_::__type__DO_NOT_CHANGE::array)
-        throw exception("this tool does not currently support texture formats other than 2D images & array types");
+        if (selected_bitmap->bitmap_resource_handle_.content_ptr == 0 || selected_bitmap->bitmap_resource_handle_.content_ptr == (BitmapDataResource*)0xbcbcbcbcbcbcbcbc) {
+            // then we need to fetch this resource
+            resource_handle* mid_resource = nullptr;
+            for (int i = highest_used_resource+1; i < file_resources.size(); i++) {
+                if (file_resources[i]->is_chunk == false) {
+                    mid_resource = file_resources[i];
+                    highest_used_resource = i;
+                    break;
+            }}
+            if (mid_resource == nullptr) throw exception("no bitmap resource header resource-file found");
 
-    if (selected_bitmap->bitmap_resource_handle_.content_ptr == 0 || selected_bitmap->bitmap_resource_handle_.content_ptr == (BitmapDataResource*)0xbcbcbcbcbcbcbcbc) {
-        // then we need to fetch this resource
-        resource_handle* mid_resource = nullptr;
-        for (int i = 0; i < file_resources.size(); i++) {
-            if (file_resources[i]->is_chunk == false) {
-                mid_resource = file_resources[i];
-                break;
-            }
+            char* res_tagdata = nullptr;
+            char* res_cleanup_ptr = nullptr;
+            TagProcessing::Open_ready_tag(mid_resource->content, mid_resource->size, res_tagdata, res_cleanup_ptr);
+            if (res_tagdata == nullptr || res_cleanup_ptr == nullptr) throw exception("failed to open tag resource file");
+            mid_resource->content = res_cleanup_ptr; // pointer for mr cleanup
+            selected_bitmap->bitmap_resource_handle_.content_ptr = (BitmapDataResource*)res_tagdata;
         }
-        if (mid_resource == nullptr) throw exception("no bitmap resource header resource-file found");
+        BitmapDataResource* bitmap_details = selected_bitmap->bitmap_resource_handle_.content_ptr;
 
-        char* res_tagdata = nullptr;
-        char* res_cleanup_ptr = nullptr;
-        TagProcessing::Open_ready_tag(mid_resource->content, mid_resource->size, res_tagdata, res_cleanup_ptr);
-        if (res_tagdata == nullptr || res_cleanup_ptr == nullptr) throw exception("failed to open tag resource file");
-        mid_resource->content = res_cleanup_ptr; // pointer for mr cleanup
-        selected_bitmap->bitmap_resource_handle_.content_ptr = (BitmapDataResource*)res_tagdata;
-    }
-    BitmapDataResource* bitmap_details = selected_bitmap->bitmap_resource_handle_.content_ptr;
+        char* DDSheader_dest = nullptr;
+        size_t image_data_size = 0;
+        char* image_data_ptr = nullptr;
+        // instead of doing any of that, lets just pick the largest resource file
+        int largest_resource_index = -1;
 
+        if (bitm_tag->bitmaps_.count == 1) { // we only look for mips when theres only 1 bitmap, otherwise its not possible to have mips?
+            for (int i = 0; i < file_resources.size(); i++) {
+                if (file_resources[i]->is_chunk && file_resources[i]->size > image_data_size) {
+                    largest_resource_index = i;
+                    image_data_size = file_resources[i]->size;
+                    image_data_ptr = file_resources[i]->content;
+        }}}
+        if (largest_resource_index == -1) { // resort to internal pixel buffer (the lowest resolution by the looks of it)
+            cout << "using internal pixel buffer\n";
+            image_data_size = bitmap_details->pixels.data_size;
+            image_data_ptr = bitmap_details->pixels.content_ptr;
+        }
 
-    // process if array type
-    //if (selected_bitmap->type__DO_NOT_CHANGE == bitm::__bitmaps_::__type__DO_NOT_CHANGE::array) {
-    //    cout << "extracting as array type\n";
-    //    for (int i = 0; i < file_resources.size(); i++) {
-    //        if (file_resources[i]->is_chunk) {
-    //            char* DDSheader_dest = nullptr;
-    //            try{BITM_Export(filepath + std::to_string(i+1), tagdata, file_resources, DDSheader_dest, file_resources[i]->size, file_resources[i]->content);
-    //            }catch (exception ex) {
-    //                if (DDSheader_dest) delete[] DDSheader_dest;
-    //                throw ex;}
-    //            delete[] DDSheader_dest;
-    //    }}
-    //    // also get anything from the pixel buffer
-    //    if (bitmap_details->pixels.data_size > 0){
-    //        char* DDSheader_dest = nullptr;
-    //        try{BITM_Export(filepath + "0", tagdata, file_resources, DDSheader_dest, bitmap_details->pixels.data_size, bitmap_details->pixels.content_ptr);
-    //        }catch (exception ex) {
-    //            if (DDSheader_dest) delete[] DDSheader_dest;
-    //            throw ex;}
-    //        delete[] DDSheader_dest;
-    //    }
-
-    //    return;
-    //}
-
-
-
-    char* DDSheader_dest = nullptr;
-    size_t image_data_size = 0;
-    char* image_data_ptr = nullptr;
-    // instead of doing any of that, lets just pick the largest resource file
-    int largest_resource_index = -1;
-    for (int i = 0; i < file_resources.size(); i++) {
-        if (file_resources[i]->is_chunk && file_resources[i]->size > image_data_size) {
-            largest_resource_index = i;
-            image_data_size = file_resources[i]->size;
-            image_data_ptr = file_resources[i]->content;
-    }}
-    if (largest_resource_index == -1) { // resort to internal pixel buffer (the lowest resolution by the looks of it)
-        image_data_size = bitmap_details->pixels.data_size;
-        image_data_ptr = bitmap_details->pixels.content_ptr;
-    }
-
-    if (image_data_size == 0 || image_data_ptr == nullptr) throw exception("no pixels to export from this image, possible read logic failure");
+        if (image_data_size == 0 || image_data_ptr == nullptr) throw exception("no pixels to export from this image, possible read logic failure");
     
-    try{BITM_Export(filepath, tagdata, file_resources, DDSheader_dest, image_data_size, image_data_ptr);
-    }catch (exception ex) {
-        if (DDSheader_dest) delete[] DDSheader_dest;
-        throw ex;}
-    delete[] DDSheader_dest;
+        try{BITM_Export(filepath + std::to_string(bitmap_index), DDSheader_dest, bitm_tag, selected_bitmap, image_data_size, image_data_ptr);
+        }catch (exception ex) {
+            if (DDSheader_dest) delete[] DDSheader_dest;
+            throw ex;}
+        delete[] DDSheader_dest;
+    }
 }
 
 
@@ -450,6 +459,7 @@ void ProcessTagfile(std::string filepath) {
     vector<resource_handle*> file_resources = {};
     try{
         OpenTag(filepath, tagdata, cleanup_ptr, file_resources);
+        cout << "found " << file_resources.size() << " resources\n";
         BITM_Process(filepath, tagdata, file_resources);}
     catch (exception ex) {
         if (cleanup_ptr) delete[] cleanup_ptr;
@@ -492,7 +502,7 @@ void FindBitmaps(const std::wstring& directory){
 }
 
 
-std::string version = "0.2.2";
+std::string version = "0.2.3";
 int main(int argc, char* argv[]){
     try{
         HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think
