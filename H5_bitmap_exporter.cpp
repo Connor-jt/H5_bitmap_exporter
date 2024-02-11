@@ -214,9 +214,8 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
     if (tag_type != TAG_OBJ_TYPE::bitmap)
         if (tag_type == TAG_OBJ_TYPE::NONE) throw exception("not a bitmap file");
         else throw exception("valid tag file, not a bitmap tag");
+
     // READ ALL RESOURCES
-    // we now need to look for resource files, if its a chunk, add it to the out array
-    // if its a tag struct file, add it to the inputs
     // convert path into parent directory
     const size_t last_slash_idx = filepath.rfind('\\');
     if (std::string::npos == last_slash_idx) throw exception("failed to calculate file directory (theres virtually no way this happens)");
@@ -224,7 +223,7 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
 
     int non_chunks = 0;
     int chunks = 0;
-    // then created properly sorted set
+    // then create properly sorted array
     vector<resource_handle*> unsorted_files = {};
     for (const auto& file : std::filesystem::directory_iterator(filefolder)) {
         string current_file = file.path().string();
@@ -440,6 +439,7 @@ void BITM_Process(std::string filepath, char* tagdata, vector<resource_handle*> 
             image_data_size = bitmap_details->pixels.data_size;
             image_data_ptr = bitmap_details->pixels.content_ptr;
         }
+        else cout << "using resource index " << std::to_string(largest_resource_index) << " : " << file_resources[largest_resource_index]->filename << "\n";
 
         if (image_data_size == 0 || image_data_ptr == nullptr) throw exception("no pixels to export from this image, possible read logic failure");
     
@@ -502,7 +502,7 @@ void FindBitmaps(const std::wstring& directory){
 }
 
 
-std::string version = "0.2.3";
+std::string version = "0.2.4";
 int main(int argc, char* argv[]){
     try{
         HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think

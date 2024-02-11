@@ -754,6 +754,9 @@ HRESULT Xbox::Detile(
         if (FAILED(hr))
             return hr;
 
+        if (xbox.GetSize() < layout.SizeBytes)
+            throw std::exception("not enough bytes in texture to detile");
+
         if (layout.Planes != 1)
             return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
         
