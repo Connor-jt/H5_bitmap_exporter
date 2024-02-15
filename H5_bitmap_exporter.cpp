@@ -504,7 +504,7 @@ void FindBitmaps(const std::wstring& directory){
 }
 
 
-std::string version = "0.2.5";
+std::string version = "0.2.6";
 int main(int argc, char* argv[]){
     try{
         HRESULT hr = CoInitialize(NULL); // used for the WIC file exporting? i think
