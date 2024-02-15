@@ -250,7 +250,9 @@ void OpenTag(std::string filepath, char*& tagdata, char*& cleanup_ptr, vector<re
 
     // then sort the things
     if (chunks > 0) { // then theres a single resource handle with multiple chunks
-        if (non_chunks != 1) throw exception("bitmap with chunks can only have 1 intermediate resource file");
+        if (non_chunks != 1) {
+            file_resources.clear(); // so we don't attempt to delete nullptrs when cleaning up
+            throw exception("bitmap with chunks can only have 1 intermediate resource file");}
         for (auto resource : unsorted_files) {
             // non chunk goes first
             if (!resource->is_chunk) file_resources[0] = resource;
