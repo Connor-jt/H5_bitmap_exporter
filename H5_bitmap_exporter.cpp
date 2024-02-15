@@ -446,7 +446,7 @@ void BITM_Process(std::string filepath, char* tagdata, vector<resource_handle*> 
         try{BITM_Export(filepath + std::to_string(bitmap_index), DDSheader_dest, bitm_tag, selected_bitmap, image_data_size, image_data_ptr);
         }catch (exception ex) {
             if (DDSheader_dest) delete[] DDSheader_dest;
-            throw ex;}
+            throw;}
         delete[] DDSheader_dest;
     }
 }
@@ -464,7 +464,7 @@ void ProcessTagfile(std::string filepath) {
     catch (exception ex) {
         if (cleanup_ptr) delete[] cleanup_ptr;
         cleanup_resources(file_resources);
-        throw ex;}
+        throw;}
     // cleanup junk
     if (cleanup_ptr) delete[] cleanup_ptr;
     cleanup_resources(file_resources);
@@ -616,7 +616,7 @@ int main(int argc, char* argv[]){
         if (argc <= 1) system("pause"); // dont pause if this was called by a script or something
         return 0;
 
-    }catch (exception ex){
+    }catch (...){
         std::cout << "complete process failure\n";
         system("pause");
         return 0;
